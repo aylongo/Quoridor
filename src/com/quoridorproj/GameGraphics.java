@@ -5,19 +5,29 @@ import java.awt.*;
 
 public class GameGraphics {
     private final int BOARD_SIZE = 17;
+    private final Color MOVE_COLOR = new Color(224, 224, 224);
+    private final Color WALL_COLOR = new Color(192, 192, 192);
+    private final Color PLAYER1_COLOR = new Color(255, 51, 51);
+    private final Color PLAYER2_COLOR = new Color(51, 153, 255);
+    private final Color VMOVE_COLOR = new Color(255, 178, 102);
 
-    JFrame frame;
-    JButton[][] buttons;
+    private JFrame frame;
+    private JButton[][] buttons;
 
     public GameGraphics() {
-        setFrame();
+        this.frame = new JFrame();
         addBoardButtons();
+        setBoardButtonsColor();
+        setFrame();
     }
 
-    public void setFrame() {
-        this.frame = new JFrame();
+    public JButton[][] getButtons() {
+        return this.buttons;
+    }
+
+    private void setFrame() {
         this.frame.setTitle("Quoridor");
-        this.frame.setSize(1200, 1000);
+        this.frame.setSize(1300, 1000);
         this.frame.setFocusable(true);
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.setResizable(false);
@@ -28,25 +38,21 @@ public class GameGraphics {
         JPanel boardPanel = new JPanel(new GridBagLayout());
         boardPanel.setSize(1000, 1000);
         setBoardButtons(boardPanel);
-        this.frame.add(boardPanel, "Center"); // After adding the buttons to the panel, it adds the panel to the frame
+        this.frame.add(boardPanel, "West"); // After adding the buttons to the panel, it adds the panel to the frame
     }
 
     private void setBoardButtons(JPanel boardPanel) {
         int width, height;
-        int SIZE1 = 40, SIZE2 = 10;
+        int SIZE1 = 39, SIZE2 = 11;
         GridBagConstraints constraints = new GridBagConstraints();
         this.buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 this.buttons[i][j] = new JButton();
-                if (i % 2 == 0)
-                    height = SIZE1;
-                else
-                    height = SIZE2;
-                if (j % 2 == 0)
-                    width = SIZE1;
-                else
-                    width = SIZE2;
+
+                // Setting width and height by the button's coordinates
+                height = i % 2 == 0 ? SIZE1 : SIZE2;
+                width = j % 2 == 0 ? SIZE1 : SIZE2;
 
                 // Setting the button's size and margins
                 this.buttons[i][j].setPreferredSize(new Dimension(width, height));
@@ -58,6 +64,26 @@ public class GameGraphics {
                 boardPanel.add(this.buttons[i][j], constraints);
             }
         }
+    }
+
+    private void setBoardButtonsColor() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                Color buttonColor;
+                if (i % 2 == 0 && j % 2 == 0)
+                    buttonColor = MOVE_COLOR;
+                else
+                    buttonColor = WALL_COLOR;
+
+                this.buttons[i][j].setBackground(buttonColor);
+            }
+        }
+        this.buttons[16][8].setBackground(PLAYER1_COLOR);
+        this.buttons[0][8].setBackground(PLAYER2_COLOR);
+    }
+
+    public void setValidMove(int x, int y) {
+        this.buttons[y][x].setBackground(VMOVE_COLOR);
     }
 
     public void setBoardButtonsEnabled(boolean state) {
@@ -76,15 +102,15 @@ public class GameGraphics {
         }
     }
 
-    protected int getBoardButtonCoordinates(JButton button) {
+    public Tuple<Integer, Integer> getBoardButtonCoordinates(JButton button) {
         // The function returns the coordinates of the clicked button (The tens' digit is the row and the units' digit is the column)
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (this.buttons[i][j] == button) {
-                    return ((i * 10) + j);
+                    return new Tuple<>(j, i);
                 }
             }
         }
-        return -1;
+        return null;
     }
 }
