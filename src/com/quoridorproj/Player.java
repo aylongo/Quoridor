@@ -24,4 +24,12 @@ public class Player {
     public void setLastTurn(Square lastTurn) {
         this.lastMove = lastTurn;
     }
+
+    public int getWallsLeft() {
+        return this.wallsLeft;
+    }
+
+    public void decWallLeft() {
+        this.wallsLeft--;
+    }
 }

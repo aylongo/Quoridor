@@ -1,11 +1,8 @@
 package com.quoridorproj;
 
-import java.security.cert.CertificateRevokedException;
 import java.util.ArrayList;
 
 public class Game {
-    private final int NUM_PLAYERS = 2;
-
     private Board board;
     private Player[] players;
     private int currentTurn;
@@ -13,7 +10,7 @@ public class Game {
 
     public Game() {
         this.board = new Board();
-        this.players = new Player[NUM_PLAYERS + 1];
+        this.players = new Player[3];
         this.players[BoardFill.PLAYER1.value()] = new Player(BoardFill.PLAYER1.value());
         this.players[BoardFill.PLAYER2.value()] = new Player(BoardFill.PLAYER2.value());
         this.turnsCounter = 0;
@@ -48,6 +45,16 @@ public class Game {
             return (this.players[currentTurn].getLastMove().getY() == 0);
         else
             return (this.players[currentTurn].getLastMove().getY() == 8);
+    }
+
+    public void incTurns() {
+        this.turnsCounter++;
+    }
+
+    public void updateCurrentTurn() {
+        this.currentTurn++;
+        if (this.currentTurn > BoardFill.PLAYER2.value())
+            this.currentTurn = 1;
     }
 
     /*
@@ -110,7 +117,7 @@ public class Game {
         return validMoves;
     }
 
-    public boolean isLocked(Player player) {
+    private boolean isLocked(Player player) {
         // The function checks if the player is locked (between walls). Returns true if player locked and false if otherwise
         int winRow = player.getId() == BoardFill.PLAYER1.value() ? 0 : 8;
         return isLockedRecursive(player.getLastMove(), winRow);
@@ -128,6 +135,8 @@ public class Game {
     }
 
     public boolean isValidMove(Move move) {
+        if (move.isWall())
+            return false;
         ArrayList<Move> validMoves = this.getValidMoves(players[this.getCurrentTurn()]);
         for (Move validMove : validMoves) {
             if (move.equals(validMove))
@@ -136,11 +145,41 @@ public class Game {
         return false;
     }
 
-    public boolean isValidWall(Move move) {
-        // TODO: This function checks if a wall can be placed in chosen place. Checks if both players aren't locked and the current wall is placed over other walls
+    public void doMove(Move move) {
+        int x = move.getX(), y = move.getY();
+        Player player = this.players[this.currentTurn];
+        int lastX = player.getLastMove().getX(), lastY = this.players[currentTurn].getLastMove().getY();
+        this.board.getSquares()[y][x].setValue(this.currentTurn);
+        this.board.getSquares()[lastY][lastX].setValue(BoardFill.EMPTY.value());
+        player.setLastTurn(this.board.getSquares()[y][x]);
     }
 
-    public void placeWall(Move move) {
+    public boolean isValidWall(Move move) {
+        // TODO: This function checks if a wall can be placed in chosen place. Checks if both players aren't locked and the current wall is placed over other walls
+        if (!move.isWall() || this.players[this.currentTurn].getWallsLeft() == 0)
+            return false;
+        int moveX = move.getX(), moveY = move.getY();
+        if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Check if horizontally wall was placed
+            return false;
+        else if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Check if vertically wall was placed
+            return false;
+        return true;
+    }
+
+    public void doPlaceWall(Move move) {
         // TODO: This function places the wall on the board by changing neighbors to null
+        int moveX = move.getX(), moveY = move.getY();
+        this.players[this.currentTurn].decWallLeft();
+        if (move.getOrientation() == Orientation.HORIZONTAL) {
+            this.board.getSquares()[moveY][moveX].setNeighbor(Direction.DOWN, null);
+            this.board.getSquares()[moveY][moveX + 1].setNeighbor(Direction.DOWN, null);
+            this.board.getSquares()[moveY + 1][moveX].setNeighbor(Direction.UP, null);
+            this.board.getSquares()[moveY + 1][moveX + 1].setNeighbor(Direction.UP, null);
+        } else {
+            this.board.getSquares()[moveY][moveX].setNeighbor(Direction.RIGHT, null);
+            this.board.getSquares()[moveY][moveX + 1].setNeighbor(Direction.LEFT, null);
+            this.board.getSquares()[moveY + 1][moveX].setNeighbor(Direction.RIGHT, null);
+            this.board.getSquares()[moveY + 1][moveX + 1].setNeighbor(Direction.LEFT, null);
+        }
     }
 }

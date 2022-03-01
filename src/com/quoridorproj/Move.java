@@ -49,6 +49,14 @@ public class Move {
         this.orientation = orientation;
     }
 
+    public boolean isWall() {
+        return this.isWall;
+    }
+
+    public Orientation getOrientation() {
+        return this.orientation;
+    }
+
     public void setWall(boolean isWall) {
         this.isWall = isWall;
     }
