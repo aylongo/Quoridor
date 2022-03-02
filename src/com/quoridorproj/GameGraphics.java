@@ -5,9 +5,10 @@ import java.awt.*;
 
 public class GameGraphics {
     private final int BOARD_SIZE = 17;
+    // TODO: Colors HashMap
     private final Color EMPTY_COLOR = new Color(224, 224, 224);
     private final Color WALL_COLOR = new Color(192, 192, 192);
-    private final Color PWALL_COLOR = new Color(162, 115, 93);
+    private final Color PWALL_COLOR = new Color(133, 126, 105);
     private final Color PLAYER1_COLOR = new Color(255, 51, 51);
     private final Color PLAYER2_COLOR = new Color(51, 153, 255);
     private final Color VMOVE_COLOR = new Color(255, 178, 102);
@@ -169,7 +170,7 @@ public class GameGraphics {
         JLabel playerWallsLeftLabel;
         this.playersWallsLeft = new JLabel[3];
 
-        for (int i = BoardFill.PLAYER1.value(); i < 3; i++){
+        for (int i = BoardFill.PLAYER1.value(); i < 3; i++) {
             playerWallsLeftLabel = new JLabel("", JLabel.CENTER);
             playerWallsLeftLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             playerWallsLeftLabel.setPreferredSize(new Dimension(290, 80));
@@ -262,5 +263,10 @@ public class GameGraphics {
 
     public void updatePlayerWallsLeft(int player, int wallsLeft) {
         this.playersWallsLeft[player].setText(String.format("Player %d: %d Walls", player, wallsLeft));
+    }
+
+    public void reset() {
+        setBoardButtonsColor();
+        updateComment("");
     }
 }

@@ -17,7 +17,7 @@ public class GameHandler implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO: Handle buttons clicks here. Check if a wall place click or a move click
+        // The function handles buttons clicks
         if (e.getSource() == graphics.getRotateButton())
             handleRotate();
         else if (e.getSource() == graphics.getContinueButton())
@@ -39,7 +39,7 @@ public class GameHandler implements ActionListener {
         this.game.incTurns();
         this.graphics.updateComment("");
         this.graphics.getRotateButton().setText("Horizontal");
-        
+
         if (this.game.isGameOver()) {
             this.graphics.setBoardButtonsEnabled(false);
             this.graphics.updateGameStatus(String.format("PLAYER %d WON!", game.getCurrentTurn()));
@@ -105,7 +105,7 @@ public class GameHandler implements ActionListener {
         ArrayList<Move> validMoves = this.game.getValidMoves(players[game.getCurrentTurn()]);
         for (Move validMove : validMoves) {
             int x = validMove.getX(), y = validMove.getY();
-            int buttonX = x * 2, buttonY = y * 2; // Switch to GUI's Board coordinates format
+            int buttonX = x * 2, buttonY = y * 2; // Switches to GUI's Board coordinates format
             this.graphics.setValidMove(buttonX, buttonY);
         }
     }
@@ -115,7 +115,7 @@ public class GameHandler implements ActionListener {
         ArrayList<Move> validMoves = game.getValidMoves(players[game.getCurrentTurn()]);
         for (Move validMove : validMoves) {
             int x = validMove.getX(), y = validMove.getY();
-            int buttonX = x * 2, buttonY = y * 2; // Switch to GUI's Board coordinates format
+            int buttonX = x * 2, buttonY = y * 2; // Switches to GUI's Board coordinates format
             this.graphics.removeValidMove(buttonX, buttonY);
         }
     }
@@ -132,8 +132,8 @@ public class GameHandler implements ActionListener {
     }
 
     private void resetGame() {
-        // TODO: this.graphics.reset();
-        // TODO: this.game.reset();
+        this.graphics.reset();
+        this.game.reset();
         setButtonsSets();
         paintValidMoves();
         this.graphics.setBoardButtonsListener(this);

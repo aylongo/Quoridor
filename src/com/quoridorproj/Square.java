@@ -5,13 +5,14 @@ import java.util.HashMap;
 public class Square {
     private Tuple<Integer, Integer> coordinates;
     private int value;
+    private boolean isWallPlaced;
     private HashMap<Integer, Square> neighbors;
 
     public Square(int x, int y) {
         this.coordinates = new Tuple<>(x, y);
         this.value = BoardFill.EMPTY.value();
         this.neighbors = new HashMap<>();
-        // Setting the square's neighbors HashMap keys
+        // Sets the square's neighbors HashMap keys
         for (Direction direction : Direction.values()) {
             this.neighbors.put(direction.key(), null);
         }
@@ -31,6 +32,14 @@ public class Square {
 
     public void setValue(int value) {
         this.value = value;
+    }
+
+    public boolean isWallPlaced() {
+        return this.isWallPlaced;
+    }
+
+    public void setWallPlaced(boolean wallPlaced) {
+        this.isWallPlaced = wallPlaced;
     }
 
     public Square getNeighbor(Direction direction) {

@@ -11,12 +11,7 @@ public class Game {
     public Game() {
         this.board = new Board();
         this.players = new Player[3];
-        this.players[BoardFill.PLAYER1.value()] = new Player(BoardFill.PLAYER1.value());
-        this.players[BoardFill.PLAYER2.value()] = new Player(BoardFill.PLAYER2.value());
-        this.turnsCounter = 0;
-        // Who plays first is chosen randomly: (int) (Math.random() * (max - min + 1) + min)
-        this.currentTurn = (int) (Math.random() * (BoardFill.PLAYER2.value()) + BoardFill.PLAYER1.value());
-        placePlayersOnBoard();
+        reset();
     }
 
     public Player[] getPlayers() {
@@ -42,9 +37,9 @@ public class Game {
     public boolean isGameOver() {
         // Game ends when one of the players reaches one of the 9 squares opposite to his baseline
         if (this.currentTurn == BoardFill.PLAYER1.value())
-            return (this.players[currentTurn].getLastMove().getY() == 0);
+            return this.players[currentTurn].getLastMove().getY() == 0;
         else
-            return (this.players[currentTurn].getLastMove().getY() == 8);
+            return this.players[currentTurn].getLastMove().getY() == 8;
     }
 
     public void incTurns() {
@@ -86,6 +81,7 @@ public class Game {
     */
 
     public ArrayList<Move> getValidMoves(Player player) {
+        // TODO: Comments
         // The function returns a list of the valid moves for the current player
         ArrayList<Move> validMoves = new ArrayList<>();
         Move move;
@@ -135,6 +131,7 @@ public class Game {
     }
 
     public boolean isValidMove(Move move) {
+        // TODO: Comments
         if (move.isWall())
             return false;
         ArrayList<Move> validMoves = this.getValidMoves(players[this.getCurrentTurn()]);
@@ -146,6 +143,7 @@ public class Game {
     }
 
     public void doMove(Move move) {
+        // TODO: Comments
         int x = move.getX(), y = move.getY();
         Player player = this.players[this.currentTurn];
         int lastX = player.getLastMove().getX(), lastY = this.players[currentTurn].getLastMove().getY();
@@ -155,10 +153,13 @@ public class Game {
     }
 
     public boolean isValidWall(Move move) {
+        // FIXME:
         // TODO: This function checks if a wall can be placed in chosen place. Checks if both players aren't locked and the current wall is placed over other walls
         if (!move.isWall() || this.players[this.currentTurn].getWallsLeft() == 0)
             return false;
         int moveX = move.getX(), moveY = move.getY();
+        if (this.board.getSquares()[moveY][moveX].isWallPlaced())
+            return false;
         if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Check if horizontally wall was placed
             return false;
         else if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Check if vertically wall was placed
@@ -167,9 +168,11 @@ public class Game {
     }
 
     public void doPlaceWall(Move move) {
-        // TODO: This function places the wall on the board by changing neighbors to null
+        // TODO: Comments, Efficient
+        // The function places the wall on the board (by changing neighbors to null)
         int moveX = move.getX(), moveY = move.getY();
         this.players[this.currentTurn].decWallLeft();
+        this.board.getSquares()[moveY][moveX].setWallPlaced(true);
         if (move.getOrientation() == Orientation.HORIZONTAL) {
             this.board.getSquares()[moveY][moveX].setNeighbor(Direction.DOWN, null);
             this.board.getSquares()[moveY][moveX + 1].setNeighbor(Direction.DOWN, null);
@@ -181,5 +184,15 @@ public class Game {
             this.board.getSquares()[moveY + 1][moveX].setNeighbor(Direction.RIGHT, null);
             this.board.getSquares()[moveY + 1][moveX + 1].setNeighbor(Direction.LEFT, null);
         }
+    }
+
+    public void reset() {
+        this.players[BoardFill.PLAYER1.value()] = new Player(BoardFill.PLAYER1.value());
+        this.players[BoardFill.PLAYER2.value()] = new Player(BoardFill.PLAYER2.value());
+        this.turnsCounter = 0;
+        // Who plays first is chosen randomly: (int) (Math.random() * (max - min + 1) + min)
+        this.currentTurn = (int) (Math.random() * (BoardFill.PLAYER2.value()) + BoardFill.PLAYER1.value());
+        this.board.resetBoard();
+        placePlayersOnBoard();
     }
 }

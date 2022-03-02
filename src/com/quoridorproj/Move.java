@@ -1,7 +1,5 @@
 package com.quoridorproj;
 
-import java.util.Objects;
-
 public class Move {
     private Tuple<Integer, Integer> coordinates;
     private boolean isWall;
