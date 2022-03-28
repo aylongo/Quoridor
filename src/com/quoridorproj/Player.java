@@ -13,6 +13,18 @@ public class Player {
         this.lastMove = null;
     }
 
+    private Player(Player player, Board board) {
+        this.id = player.id;
+        this.wallsLeft = player.wallsLeft;
+
+        int lastMoveX = player.getLastMove().getX(), lastMoveY = player.getLastMove().getY();
+        this.lastMove = board.getSquares()[lastMoveY][lastMoveX];
+    }
+
+    public Player duplicate(Board board) {
+        return new Player(this, board);
+    }
+
     public int getId() {
         return this.id;
     }

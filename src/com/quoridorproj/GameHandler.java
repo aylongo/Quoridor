@@ -106,7 +106,7 @@ public class GameHandler implements ActionListener {
         for (Move validMove : validMoves) {
             int x = validMove.getX(), y = validMove.getY();
             int buttonX = x * 2, buttonY = y * 2; // Switches to GUI's Board coordinates format
-            this.graphics.setValidMove(buttonX, buttonY);
+            this.graphics.setValidMove(buttonX, buttonY, game.getCurrentTurn());
         }
     }
 

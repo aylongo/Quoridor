@@ -9,11 +9,6 @@ public class Tuple<X, Y> {
         this.y = y;
     }
 
-    /**
-     *
-     * @return String
-     */
-
     @Override
     public String toString() {
         return String.format("(%s, %s)", this.x.toString(), this.y.toString());

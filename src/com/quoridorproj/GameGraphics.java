@@ -8,10 +8,11 @@ public class GameGraphics {
     // TODO: Colors HashMap
     private final Color EMPTY_COLOR = new Color(224, 224, 224);
     private final Color WALL_COLOR = new Color(192, 192, 192);
-    private final Color PWALL_COLOR = new Color(133, 126, 105);
-    private final Color PLAYER1_COLOR = new Color(255, 51, 51);
+    private final Color PLACED_WALL_COLOR = new Color(105, 105, 105, 255);
+    private final Color PLAYER1_COLOR = new Color(255, 64, 64);
     private final Color PLAYER2_COLOR = new Color(51, 153, 255);
-    private final Color VMOVE_COLOR = new Color(255, 178, 102);
+    private final Color VALID_MOVE_PLAYER1_COLOR = new Color(255, 195, 139);
+    private final Color VALID_MOVE_PLAYER2_COLOR = new Color(198, 226, 255);
 
     private JFrame frame;
     private JPanel panel;
@@ -99,8 +100,8 @@ public class GameGraphics {
                 this.buttons[i][j].setBackground(buttonColor);
             }
         }
-        this.buttons[16][8].setBackground(PLAYER1_COLOR);
-        this.buttons[0][8].setBackground(PLAYER2_COLOR);
+        this.buttons[BOARD_SIZE - 1][BOARD_SIZE / 2].setBackground(PLAYER1_COLOR);
+        this.buttons[0][BOARD_SIZE / 2].setBackground(PLAYER2_COLOR);
     }
 
     private void setSidePanel() {
@@ -217,8 +218,9 @@ public class GameGraphics {
         return null;
     }
 
-    public void setValidMove(int x, int y) {
-        this.buttons[y][x].setBackground(VMOVE_COLOR);
+    public void setValidMove(int x, int y, int currentTurn) {
+        Color validColor = (currentTurn == BoardFill.PLAYER1.value() ? VALID_MOVE_PLAYER1_COLOR : VALID_MOVE_PLAYER2_COLOR);
+        this.buttons[y][x].setBackground(validColor);
     }
 
     public void removeValidMove(int x, int y) {
@@ -236,13 +238,13 @@ public class GameGraphics {
 
     public void paintWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
-            this.buttons[y][x].setBackground(PWALL_COLOR);
-            this.buttons[y][x + 1].setBackground(PWALL_COLOR);
-            this.buttons[y][x - 1].setBackground(PWALL_COLOR);
+            this.buttons[y][x].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y][x + 1].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y][x - 1].setBackground(PLACED_WALL_COLOR);
         } else {
-            this.buttons[y][x].setBackground(PWALL_COLOR);
-            this.buttons[y + 1][x].setBackground(PWALL_COLOR);
-            this.buttons[y - 1][x].setBackground(PWALL_COLOR);
+            this.buttons[y][x].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y + 1][x].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y - 1][x].setBackground(PLACED_WALL_COLOR);
         }
     }
 

@@ -5,8 +5,9 @@ import java.util.HashMap;
 public class Square {
     private Tuple<Integer, Integer> coordinates;
     private int value;
-    private boolean isWallPlaced;
-    private HashMap<Integer, Square> neighbors;
+    private boolean isWallPlaced; // A boolean variable that defines if the linked wall was placed
+    // (A wall is linked to the square closest to (0, 0) out of the 4 squares it touches)
+    private HashMap<Integer, Square> neighbors; // An HashMap object that holds the square's neighbors on the board
 
     public Square(int x, int y) {
         this.coordinates = new Tuple<>(x, y);
@@ -16,6 +17,20 @@ public class Square {
         for (Direction direction : Direction.values()) {
             this.neighbors.put(direction.key(), null);
         }
+    }
+
+    private Square(Square square) {
+        this.coordinates = new Tuple<>(square.coordinates.x, square.coordinates.y);
+        this.value = square.value;
+        this.neighbors = new HashMap<>();
+        // Sets the square's neighbors HashMap keys
+        for (Direction direction : Direction.values()) {
+            this.neighbors.put(direction.key(), null);
+        }
+    }
+
+    public Square duplicate() {
+        return new Square(this);
     }
 
     public int getX() {

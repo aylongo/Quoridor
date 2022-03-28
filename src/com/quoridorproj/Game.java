@@ -1,6 +1,8 @@
 package com.quoridorproj;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Game {
     private Board board;
@@ -12,6 +14,19 @@ public class Game {
         this.board = new Board();
         this.players = new Player[3];
         reset();
+    }
+
+    private Game(Game game) {
+        this.board = game.board.duplicate();
+        this.players = new Player[3];
+        this.players[BoardFill.PLAYER1.value()] = game.players[BoardFill.PLAYER1.value()].duplicate(this.board);
+        this.players[BoardFill.PLAYER2.value()] = game.players[BoardFill.PLAYER2.value()].duplicate(this.board);
+        this.currentTurn = game.currentTurn;
+        this.turnsCounter = game.turnsCounter;
+    }
+
+    public Game duplicate() {
+        return new Game(this);
     }
 
     public Player[] getPlayers() {
@@ -26,24 +41,24 @@ public class Game {
         return this.turnsCounter;
     }
 
+    public void incTurns() {
+        this.turnsCounter++;
+    }
+
     private void placePlayersOnBoard() {
         Square[][] squares = this.board.getSquares();
-        squares[8][4].setValue(BoardFill.PLAYER1.value());
-        players[BoardFill.PLAYER1.value()].setLastTurn(squares[8][4]);
-        squares[0][4].setValue(BoardFill.PLAYER2.value());
-        players[BoardFill.PLAYER2.value()].setLastTurn(squares[0][4]);
+        int size = this.board.getSquaresSize();
+        squares[size - 1][size / 2].setValue(BoardFill.PLAYER1.value());
+        players[BoardFill.PLAYER1.value()].setLastTurn(squares[size - 1][size / 2]);
+        squares[0][size / 2].setValue(BoardFill.PLAYER2.value());
+        players[BoardFill.PLAYER2.value()].setLastTurn(squares[0][size / 2]);
     }
 
     public boolean isGameOver() {
-        // Game ends when one of the players reaches one of the 9 squares opposite to his baseline
-        if (this.currentTurn == BoardFill.PLAYER1.value())
-            return this.players[currentTurn].getLastMove().getY() == 0;
-        else
-            return this.players[currentTurn].getLastMove().getY() == 8;
-    }
-
-    public void incTurns() {
-        this.turnsCounter++;
+        // Game ends when one of the players reaches one of the squares opposite to his baseline (his starting line)
+        int size = this.board.getSquaresSize();
+        int winRow = this.players[currentTurn].getId() == BoardFill.PLAYER1.value() ? 0 : size - 1;
+        return this.players[currentTurn].getLastMove().getY() == winRow;
     }
 
     public void updateCurrentTurn() {
@@ -51,34 +66,6 @@ public class Game {
         if (this.currentTurn > BoardFill.PLAYER2.value())
             this.currentTurn = 1;
     }
-
-    /*
-    public ArrayList<Square> getValidMoves() {
-        // The function returns a list of the valid moves from the current square
-        ArrayList<Square> validMoves = new ArrayList<>();
-        for (Direction direction : Direction.values()) {
-            Square neighbor = this.lastTurn.getNeighbor(direction);
-            if (neighbor != null) {
-                if (neighbor.getValue() == BoardFill.EMPTY.value())
-                    validMoves.add(neighbor);
-                else if (neighbor.getValue() != this.id) {
-                    if (neighbor.getNeighbor(direction) != null)
-                        validMoves.add(neighbor.getNeighbor(direction));
-                    else {
-                        ArrayList<Direction> adjacents = direction.getAdjacents();
-                        Direction firstAdjacent = adjacents.get(0);
-                        Direction secondAdjacent = adjacents.get(1);
-                        if (neighbor.getNeighbor(firstAdjacent) != null)
-                            validMoves.add(neighbor.getNeighbor(firstAdjacent));
-                        if (neighbor.getNeighbor(secondAdjacent) != null)
-                            validMoves.add(neighbor.getNeighbor(secondAdjacent));
-                    }
-                }
-            }
-        }
-        return validMoves;
-    }
-    */
 
     public ArrayList<Move> getValidMoves(Player player) {
         // TODO: Comments
@@ -113,28 +100,57 @@ public class Game {
         return validMoves;
     }
 
-    private boolean isLocked(Player player) {
-        // The function checks if the player is locked (between walls). Returns true if player locked and false if otherwise
-        int winRow = player.getId() == BoardFill.PLAYER1.value() ? 0 : 8;
-        return isLockedRecursive(player.getLastMove(), winRow);
+    private Tuple<Integer, Square> getShortestPathToGoal(Player player) {
+        // The function uses the BFS (Breadth-First Search) method to return the player's shortest path to his goal
+        int size = this.board.getSquaresSize();
+        int winRow = player.getId() == BoardFill.PLAYER1.value() ? 0 : size - 1;
+        boolean[][] squaresVisited = new boolean[size][size];
+        int[][] distanceToGoal = new int[size][size];
+        Queue<Square> squaresQueue = new LinkedList<Square>();
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                squaresVisited[i][j] = false;
+                distanceToGoal[i][j] = -1;
+            }
+        }
+
+        Square square = player.getLastMove(); // Source square
+        squaresVisited[square.getY()][square.getX()] = true;
+        distanceToGoal[square.getY()][square.getX()] = 0;
+        squaresQueue.add(square);
+
+        while (!squaresQueue.isEmpty()) {
+            square = squaresQueue.poll();
+            if (square.getY() == winRow) {
+                int squareX = square.getX(), squareY = square.getY();
+                return new Tuple<Integer, Square>(distanceToGoal[squareY][squareX], square);
+            }
+            for (Direction direction : Direction.values()) {
+                Square neighbor = square.getNeighbor(direction);
+                if (neighbor != null && !squaresVisited[neighbor.getY()][neighbor.getX()] && neighbor.getValue() == BoardFill.EMPTY.value()) {
+                    squaresVisited[neighbor.getY()][neighbor.getX()] = true;
+                    distanceToGoal[neighbor.getY()][neighbor.getX()] = distanceToGoal[square.getY()][square.getX()] + 1;
+                    squaresQueue.add(neighbor);
+                }
+            }
+        }
+        return null;
     }
 
-    private boolean isLockedRecursive(Square square, int winRow) {
-        if (square == null)
-            return true;
-        if (square.getY() == winRow)
-            return false;
-        return isLockedRecursive(square.getNeighbor(Direction.LEFT), winRow) &&
-               isLockedRecursive(square.getNeighbor(Direction.UP), winRow) &&
-               isLockedRecursive(square.getNeighbor(Direction.DOWN), winRow) &&
-               isLockedRecursive(square.getNeighbor(Direction.RIGHT), winRow);
+    private boolean isTrapped(Player player, Move move) {
+        // The function checks if the player is locked (between walls). Returns true if player locked and false if otherwise
+        Game gameDuplicate = this.duplicate();
+        gameDuplicate.doPlaceWall(move);
+        Player playerDuplicate = gameDuplicate.getPlayers()[player.getId()];
+        return gameDuplicate.getShortestPathToGoal(playerDuplicate) == null;
     }
 
     public boolean isValidMove(Move move) {
         // TODO: Comments
         if (move.isWall())
             return false;
-        ArrayList<Move> validMoves = this.getValidMoves(players[this.getCurrentTurn()]);
+        ArrayList<Move> validMoves = this.getValidMoves(players[this.currentTurn]);
         for (Move validMove : validMoves) {
             if (move.equals(validMove))
                 return true;
@@ -153,16 +169,17 @@ public class Game {
     }
 
     public boolean isValidWall(Move move) {
-        // FIXME:
-        // TODO: This function checks if a wall can be placed in chosen place. Checks if both players aren't locked and the current wall is placed over other walls
+        // The function checks if a wall can be placed in the chosen place. Checks if at least one of the players is trapped and if the requested wall is placed over other past walls
         if (!move.isWall() || this.players[this.currentTurn].getWallsLeft() == 0)
             return false;
         int moveX = move.getX(), moveY = move.getY();
         if (this.board.getSquares()[moveY][moveX].isWallPlaced())
             return false;
-        if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Check if horizontally wall was placed
+        if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Checks if horizontally wall was placed
             return false;
-        else if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Check if vertically wall was placed
+        if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Checks if vertically wall was placed
+            return false;
+        if (isTrapped(this.players[BoardFill.PLAYER1.value()], move) || isTrapped(this.players[BoardFill.PLAYER2.value()], move)) // Checks if at least one of the players is trapped between walls
             return false;
         return true;
     }
