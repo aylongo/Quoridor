@@ -3,7 +3,7 @@ package com.quoridorproj;
 import java.util.ArrayList;
 
 public class AI {
-    private final int FEATURES_SIZE = 6;
+    private final int FEATURES_SIZE = 5;
 
     private int maxPlayer;
     private int minPlayer;
@@ -104,17 +104,17 @@ public class AI {
         boolean opponentGoalSide = isGoalSide(this.minPlayer, opponentRow, game.getWinRow(this.minPlayer), size);
 
         if (game.getTurnsCounter() < 6)
-            featuresWeights = new double[] {-5, 5, 0.25, 0.25, 100, 100};
+            featuresWeights = new double[] {-5, 5, 0.25, 0.25, 100};
         else {
-            featuresWeights = new double[] {-10, 10, 0.25, 0.25, 2, 2};
+            featuresWeights = new double[] {-20, 10, 0.25, 0.25, 10};
 
             /*
             if (playerGoalSide)
-                featuresWeights = new double[] {-3, 5, 0.25, 0.25, -5, -2.5};
+                featuresWeights = new double[] {-3, 5, 0.25, 0.25, -5};
             else if (opponentGoalSide)
-                featuresWeights = new double[] {-5, 3, 0.25, 0.25, -2.5, -5};
+                featuresWeights = new double[] {-5, 3, 0.25, 0.25, -2.5};
             else
-                featuresWeights = new double[] {-5, 5, 0.25, 0.25, 10, 10};
+                featuresWeights = new double[] {-5, 5, 0.25, 0.25, 10};
             */
         }
 
