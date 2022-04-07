@@ -25,7 +25,7 @@ public class Player {
         return new Player(this, board);
     }
 
-    public int getId() {
+    public int getID() {
         return this.id;
     }
 

@@ -16,19 +16,25 @@ public class GameGraphics {
 
     private JFrame frame;
     private JPanel panel;
+    private JPanel preGameSidePanel;
+    private JPanel sidePanel;
     private JButton[][] buttons;
     private JButton continueButton;
     private JButton rotateButton;
+    private JButton playAIButton;
+    private JButton playTwoPlayersButton;
     private JLabel comment;
     private JLabel gameStatus;
     private JLabel[] playersWallsLeft;
 
     public GameGraphics() {
         this.frame = new JFrame();
-        this.panel = new JPanel(new BorderLayout());
+        this.panel = new JPanel(new FlowLayout());
         addBoardButtons();
         setBoardButtonsColor();
+
         setSidePanel();
+        setPreGameSidePanel();
         setFrame();
     }
 
@@ -43,6 +49,10 @@ public class GameGraphics {
     public JButton getRotateButton() {
         return this.rotateButton;
     }
+
+    public JButton getPlayAIButton() { return this.playAIButton; }
+
+    public JButton getPlayTwoPlayersButton() { return this.playTwoPlayersButton; }
 
     private void setFrame() {
         this.frame.setTitle("Quoridor");
@@ -70,11 +80,11 @@ public class GameGraphics {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 this.buttons[i][j] = new JButton();
 
-                // Setting width and height by the button's coordinates
+                // Sets width and height by the button's coordinates
                 height = i % 2 == 0 ? SIZE1 : SIZE2;
                 width = j % 2 == 0 ? SIZE1 : SIZE2;
 
-                // Setting the button's size and margins
+                // Sets the button's size and margins
                 this.buttons[i][j].setPreferredSize(new Dimension(width, height));
                 this.buttons[i][j].setMaximumSize(new Dimension(width, height));
                 constraints.fill = GridBagConstraints.NONE;
@@ -82,7 +92,7 @@ public class GameGraphics {
                 constraints.ipadx = width; constraints.ipady = height;
                 constraints.insets = new Insets(2, 2, 2, 2);
 
-                // Adding the button to the board panel
+                // Adds the button to the board panel
                 boardPanel.add(this.buttons[i][j], constraints);
             }
         }
@@ -104,20 +114,43 @@ public class GameGraphics {
         this.buttons[0][BOARD_SIZE / 2].setBackground(PLAYER2_COLOR);
     }
 
-    private void setSidePanel() {
-        // Setting an outer panel to hold the side panel
-        JPanel outer = new JPanel();
-        outer.setBorder(BorderFactory.createEmptyBorder(300, 0, 0, 15));
+    private void setPreGameSidePanel() {
+        // Sets an outer panel to hold the pre-game side panel
+        this.preGameSidePanel = new JPanel();
+        this.preGameSidePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 15));
 
-        // Setting the side panel
+        // Sets the panel
+        JPanel preGameSidePanel = new JPanel();
+        preGameSidePanel.setLayout(new FlowLayout());
+        preGameSidePanel.setPreferredSize(new Dimension(300, 400));
+        preGameSidePanel.setMaximumSize(new Dimension(300, 400));
+        preGameSidePanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.GRAY));
+        preGameSidePanel.setBackground(WALL_COLOR);
+
+        // Adds the components to the panel
+        setPlayAIButton();
+        preGameSidePanel.add(this.playAIButton);
+        setPlayTwoPlayersButton();
+        preGameSidePanel.add(this.playTwoPlayersButton);
+
+        this.preGameSidePanel.add(preGameSidePanel);
+        this.panel.add(this.preGameSidePanel, BorderLayout.EAST);
+    }
+
+    private void setSidePanel() {
+        // Sets an outer panel to hold the side panel
+        this.sidePanel = new JPanel();
+        this.sidePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 15));
+
+        // Sets the side panel
         JPanel sidePanel = new JPanel();
-        sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.PAGE_AXIS));
+        sidePanel.setLayout(new FlowLayout());
         sidePanel.setPreferredSize(new Dimension(300, 400));
         sidePanel.setMaximumSize(new Dimension(300, 400));
         sidePanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.GRAY));
         sidePanel.setBackground(WALL_COLOR);
 
-        // Adding the components to the side panel
+        // Adds the components to the side panel
         setGameStatusLabel();
         sidePanel.add(this.gameStatus);
         setCommentLabel();
@@ -130,8 +163,8 @@ public class GameGraphics {
         sidePanel.add(this.playersWallsLeft[BoardFill.PLAYER1.value()]);
         sidePanel.add(this.playersWallsLeft[BoardFill.PLAYER2.value()]);
 
-        outer.add(sidePanel);
-        this.panel.add(outer, BorderLayout.EAST);
+        this.sidePanel.add(sidePanel);
+        this.panel.add(this.sidePanel, BorderLayout.EAST);
     }
 
     private void setGameStatusLabel() {
@@ -165,6 +198,20 @@ public class GameGraphics {
         this.rotateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         this.rotateButton.setFont(new Font("Arial", Font.PLAIN, 15));
         this.rotateButton.setBackground(EMPTY_COLOR);
+    }
+
+    private void setPlayAIButton() {
+        this.playAIButton = new JButton("Play Against AI");
+        this.playAIButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.playAIButton.setFont(new Font("Arial", Font.PLAIN, 15));
+        this.playAIButton.setBackground(EMPTY_COLOR);
+    }
+
+    private void setPlayTwoPlayersButton() {
+        this.playTwoPlayersButton = new JButton("Play 2 Players");
+        this.playTwoPlayersButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.playTwoPlayersButton.setFont(new Font("Arial", Font.PLAIN, 15));
+        this.playTwoPlayersButton.setBackground(EMPTY_COLOR);
     }
 
     private void setPlayersWallsLeftLables() {
@@ -204,6 +251,14 @@ public class GameGraphics {
 
     public static void setButtonEnabled(JButton button, boolean state) {
         button.setEnabled(state);
+    }
+
+    public void setPreGameSidePanelVisibility(boolean state) {
+        this.preGameSidePanel.setVisible(state);
+    }
+
+    public void setSidePanelVisibility(boolean state) {
+        this.sidePanel.setVisible(state);
     }
 
     public Tuple<Integer, Integer> getBoardButtonCoordinates(JButton button) {
@@ -263,8 +318,8 @@ public class GameGraphics {
         this.gameStatus.setText(gameStatus);
     }
 
-    public void updatePlayerWallsLeft(int player, int wallsLeft) {
-        this.playersWallsLeft[player].setText(String.format("Player %d: %d Walls", player, wallsLeft));
+    public void updatePlayerWallsLeft(int playerID, int wallsLeft) {
+        this.playersWallsLeft[playerID].setText(String.format("Player %d: %d Walls", playerID, wallsLeft));
     }
 
     public void reset() {

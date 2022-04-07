@@ -29,8 +29,16 @@ public class Game {
         return new Game(this);
     }
 
+    public Board getBoard() {
+        return this.board;
+    }
+
     public Player[] getPlayers() {
         return this.players;
+    }
+
+    public Player getPlayer(int id) {
+        return this.players[id];
     }
 
     public int getCurrentTurn() {
@@ -45,6 +53,11 @@ public class Game {
         this.turnsCounter++;
     }
 
+    public int getWinRow(int playerID) {
+        int size = this.board.getSquaresSize();
+        return playerID == BoardFill.PLAYER1.value() ? 0 : size - 1;
+    }
+
     private void placePlayersOnBoard() {
         Square[][] squares = this.board.getSquares();
         int size = this.board.getSquaresSize();
@@ -56,9 +69,14 @@ public class Game {
 
     public boolean isGameOver() {
         // Game ends when one of the players reaches one of the squares opposite to his baseline (his starting line)
-        int size = this.board.getSquaresSize();
-        int winRow = this.players[currentTurn].getId() == BoardFill.PLAYER1.value() ? 0 : size - 1;
-        return this.players[currentTurn].getLastMove().getY() == winRow;
+        int playerOneRow = getPlayer(BoardFill.PLAYER1.value()).getLastMove().getY();
+        int playerTwoRow = getPlayer(BoardFill.PLAYER2.value()).getLastMove().getY();
+
+        if (playerOneRow == getWinRow(BoardFill.PLAYER1.value()))
+            return true;
+        else if (playerTwoRow == getWinRow(BoardFill.PLAYER2.value()))
+            return true;
+        return false;
     }
 
     public void updateCurrentTurn() {
@@ -67,9 +85,10 @@ public class Game {
             this.currentTurn = 1;
     }
 
-    public ArrayList<Move> getValidMoves(Player player) {
+    public ArrayList<Move> getValidMoves(int playerID) {
         // TODO: Comments
         // The function returns a list of the valid moves for the current player
+        Player player = getPlayer(playerID);
         ArrayList<Move> validMoves = new ArrayList<>();
         Move move;
         for (Direction direction : Direction.values()) {
@@ -78,7 +97,7 @@ public class Game {
                 if (neighbor.getValue() == BoardFill.EMPTY.value()) {
                     move = Move.convertSquareToMove(neighbor);
                     validMoves.add(move);
-                } else if (neighbor.getValue() != player.getId()) {
+                } else if (neighbor.getValue() != playerID) {
                     if (neighbor.getNeighbor(direction) != null) {
                         move = Move.convertSquareToMove(neighbor.getNeighbor(direction));
                         validMoves.add(move);
@@ -100,10 +119,61 @@ public class Game {
         return validMoves;
     }
 
-    private Tuple<Integer, Square> getShortestPathToGoal(Player player) {
-        // The function uses the BFS (Breadth-First Search) method to return the player's shortest path to his goal
+    private ArrayList<Move> getPossibleWalls(int playerID) {
         int size = this.board.getSquaresSize();
-        int winRow = player.getId() == BoardFill.PLAYER1.value() ? 0 : size - 1;
+        Player player = getPlayer(playerID);
+        Player opponent = getPlayer((this.players.length - 1) - playerID + 1);
+        int[][] offsets = new int[16][2];
+        ArrayList<Move> moves = new ArrayList<>();
+
+        if (player.getWallsLeft() == 0)
+            return moves; // returns an empty array list
+
+        for (int i = 0, y = -2; i < offsets.length && y < 2; y++) {
+            for (int x = -2; x < 2; x++, i++) {
+                offsets[i][0] = x;
+                offsets[i][1] = y;
+            }
+        }
+
+        int playerX = player.getLastMove().getX(), opponentX = opponent.getLastMove().getX();
+        int playerY = player.getLastMove().getY(), opponentY = opponent.getLastMove().getY();
+
+        for (int[] offset : offsets) {
+            int playerMoveX = playerX + offset[0], playerMoveY = playerY + offset[1];
+            if ((playerMoveX >= 0 && playerMoveX < size - 1) && (playerMoveY >= 0 && playerMoveY < size - 1)) {
+                Move horizontalWallMove = new Move(playerMoveX, playerMoveY, Orientation.HORIZONTAL);
+                if (!moves.contains(horizontalWallMove) && isValidWall(horizontalWallMove))
+                    moves.add(horizontalWallMove);
+                Move verticalWallMove = new Move(playerMoveX, playerMoveY, Orientation.VERTICAL);
+                if (!moves.contains(verticalWallMove) && isValidWall(verticalWallMove))
+                    moves.add(verticalWallMove);
+            }
+            int opponentMoveX = opponentX + offset[0], opponentMoveY = opponentY + offset[1];
+            if ((opponentMoveX >= 0 && opponentMoveX < size - 1) && (opponentMoveY >= 0 && opponentMoveY < size - 1)) {
+                Move horizontalWallMove = new Move(opponentMoveX, opponentMoveY, Orientation.HORIZONTAL);
+                if (!moves.contains(horizontalWallMove) && isValidWall(horizontalWallMove))
+                    moves.add(horizontalWallMove);
+                Move verticalWallMove = new Move(opponentMoveX, opponentMoveY, Orientation.VERTICAL);
+                if (!moves.contains(verticalWallMove) && isValidWall(verticalWallMove))
+                    moves.add(verticalWallMove);
+            }
+        }
+        return moves;
+    }
+
+    public ArrayList<Move> getPossibleTurns(int playerID) {
+        ArrayList<Move> moves = new ArrayList<>();
+        moves.addAll(getPossibleWalls(playerID));
+        moves.addAll(getValidMoves(playerID));
+        return moves;
+    }
+
+    public Tuple<Integer, Square> getShortestPathToGoal(int playerID) {
+        // The function uses the BFS (Breadth-First Search) method to return the player's shortest path to his goal
+        Player player = getPlayer(playerID);
+        int size = this.board.getSquaresSize();
+        int winRow = getWinRow(playerID);
         boolean[][] squaresVisited = new boolean[size][size];
         int[][] distanceToGoal = new int[size][size];
         Queue<Square> squaresQueue = new LinkedList<Square>();
@@ -138,19 +208,18 @@ public class Game {
         return null;
     }
 
-    private boolean isTrapped(Player player, Move move) {
-        // The function checks if the player is locked (between walls). Returns true if player locked and false if otherwise
+    private boolean isTrapped(int playerID, Move move) {
+        // The function checks if the player is blocked (between walls). Returns true if the player is trapped and false if otherwise
         Game gameDuplicate = this.duplicate();
         gameDuplicate.doPlaceWall(move);
-        Player playerDuplicate = gameDuplicate.getPlayers()[player.getId()];
-        return gameDuplicate.getShortestPathToGoal(playerDuplicate) == null;
+        return gameDuplicate.getShortestPathToGoal(playerID) == null;
     }
 
     public boolean isValidMove(Move move) {
         // TODO: Comments
         if (move.isWall())
             return false;
-        ArrayList<Move> validMoves = this.getValidMoves(players[this.currentTurn]);
+        ArrayList<Move> validMoves = this.getValidMoves(this.currentTurn);
         for (Move validMove : validMoves) {
             if (move.equals(validMove))
                 return true;
@@ -161,8 +230,8 @@ public class Game {
     public void doMove(Move move) {
         // TODO: Comments
         int x = move.getX(), y = move.getY();
-        Player player = this.players[this.currentTurn];
-        int lastX = player.getLastMove().getX(), lastY = this.players[currentTurn].getLastMove().getY();
+        Player player = getPlayer(this.currentTurn);
+        int lastX = player.getLastMove().getX(), lastY = player.getLastMove().getY();
         this.board.getSquares()[y][x].setValue(this.currentTurn);
         this.board.getSquares()[lastY][lastX].setValue(BoardFill.EMPTY.value());
         player.setLastTurn(this.board.getSquares()[y][x]);
@@ -170,7 +239,7 @@ public class Game {
 
     public boolean isValidWall(Move move) {
         // The function checks if a wall can be placed in the chosen place. Checks if at least one of the players is trapped and if the requested wall is placed over other past walls
-        if (!move.isWall() || this.players[this.currentTurn].getWallsLeft() == 0)
+        if (!move.isWall() || getPlayer(this.currentTurn).getWallsLeft() == 0)
             return false;
         int moveX = move.getX(), moveY = move.getY();
         if (this.board.getSquares()[moveY][moveX].isWallPlaced())
@@ -179,7 +248,7 @@ public class Game {
             return false;
         if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Checks if vertically wall was placed
             return false;
-        if (isTrapped(this.players[BoardFill.PLAYER1.value()], move) || isTrapped(this.players[BoardFill.PLAYER2.value()], move)) // Checks if at least one of the players is trapped between walls
+        if (isTrapped(BoardFill.PLAYER1.value(), move) || isTrapped(BoardFill.PLAYER2.value(), move)) // Checks if at least one of the players is trapped between walls
             return false;
         return true;
     }
@@ -188,7 +257,7 @@ public class Game {
         // TODO: Comments, Efficient
         // The function places the wall on the board (by changing neighbors to null)
         int moveX = move.getX(), moveY = move.getY();
-        this.players[this.currentTurn].decWallLeft();
+        getPlayer(this.currentTurn).decWallLeft();
         this.board.getSquares()[moveY][moveX].setWallPlaced(true);
         if (move.getOrientation() == Orientation.HORIZONTAL) {
             this.board.getSquares()[moveY][moveX].setNeighbor(Direction.DOWN, null);

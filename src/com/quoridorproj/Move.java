@@ -1,5 +1,7 @@
 package com.quoridorproj;
 
+import java.util.Objects;
+
 public class Move {
     private Tuple<Integer, Integer> coordinates;
     private boolean isWall;
@@ -69,6 +71,11 @@ public class Move {
         return this.getX() == move.getX() && this.getY() == move.getY() &&
                this.isWall == move.isWall &&
                this.orientation == move.orientation;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(coordinates, isWall, orientation);
     }
 
     @Override
