@@ -7,11 +7,11 @@ import java.util.Queue;
 public class Game {
     private Board board;
     private Player[] players;
+    private ArrayList<Move> movesList;
     private int currentTurn;
     private int turnsCounter;
 
     public Game() {
-        this.board = new Board();
         this.players = new Player[3];
         reset();
     }
@@ -62,19 +62,34 @@ public class Game {
         Square[][] squares = this.board.getSquares();
         int size = this.board.getSquaresSize();
         squares[size - 1][size / 2].setValue(BoardFill.PLAYER1.value());
-        players[BoardFill.PLAYER1.value()].setLastTurn(squares[size - 1][size / 2]);
+        players[BoardFill.PLAYER1.value()].setCurrentSquare(squares[size - 1][size / 2]);
+        players[BoardFill.PLAYER1.value()].setLastMove(Move.convertSquareToMove(squares[size - 1][size / 2]));
         squares[0][size / 2].setValue(BoardFill.PLAYER2.value());
-        players[BoardFill.PLAYER2.value()].setLastTurn(squares[0][size / 2]);
+        players[BoardFill.PLAYER2.value()].setCurrentSquare(squares[0][size / 2]);
+        players[BoardFill.PLAYER2.value()].setLastMove(Move.convertSquareToMove(squares[0][size / 2]));
+    }
+
+    public void addMoveToList(Move move) {
+        this.movesList.add(move);
+    }
+
+    public boolean isGoalSide(int playerID, int playerRow) {
+        int size = this.board.getSquaresSize();
+        int playerWinRow = getWinRow(playerID);
+        if (playerID == BoardFill.PLAYER1.value())
+            return (playerRow > playerWinRow && playerRow <= size / 2);
+        else
+            return (playerRow < playerWinRow && playerRow >= size / 2);
     }
 
     public boolean isGameOver() {
         // Game ends when one of the players reaches one of the squares opposite to his baseline (his starting line)
-        int playerOneRow = getPlayer(BoardFill.PLAYER1.value()).getLastMove().getY();
-        int playerTwoRow = getPlayer(BoardFill.PLAYER2.value()).getLastMove().getY();
+        int playerOneRow = getPlayer(BoardFill.PLAYER1.value()).getCurrentSquare().getY();
+        int playerTwoRow = getPlayer(BoardFill.PLAYER2.value()).getCurrentSquare().getY();
 
         if (playerOneRow == getWinRow(BoardFill.PLAYER1.value()))
             return true;
-        else if (playerTwoRow == getWinRow(BoardFill.PLAYER2.value()))
+        if (playerTwoRow == getWinRow(BoardFill.PLAYER2.value()))
             return true;
         return false;
     }
@@ -92,7 +107,7 @@ public class Game {
         ArrayList<Move> validMoves = new ArrayList<>();
         Move move;
         for (Direction direction : Direction.values()) {
-            Square neighbor = player.getLastMove().getNeighbor(direction);
+            Square neighbor = player.getCurrentSquare().getNeighbor(direction);
             if (neighbor != null) {
                 if (neighbor.getValue() == BoardFill.EMPTY.value()) {
                     move = Move.convertSquareToMove(neighbor);
@@ -123,21 +138,14 @@ public class Game {
         int size = this.board.getSquaresSize();
         Player player = getPlayer(playerID);
         Player opponent = getPlayer((this.players.length - 1) - playerID + 1);
-        int[][] offsets = new int[16][2];
+        int[][] offsets = new int[][] {{-1, -1}, {-1, 0}, {0, -1}, {0, 0},};
         ArrayList<Move> moves = new ArrayList<>();
 
         if (player.getWallsLeft() == 0)
             return moves; // returns an empty array list
 
-        for (int i = 0, y = -2; i < offsets.length && y < 2; y++) {
-            for (int x = -2; x < 2; x++, i++) {
-                offsets[i][0] = x;
-                offsets[i][1] = y;
-            }
-        }
-
-        int playerX = player.getLastMove().getX(), opponentX = opponent.getLastMove().getX();
-        int playerY = player.getLastMove().getY(), opponentY = opponent.getLastMove().getY();
+        int playerX = player.getCurrentSquare().getX(), opponentX = opponent.getCurrentSquare().getX();
+        int playerY = player.getCurrentSquare().getY(), opponentY = opponent.getCurrentSquare().getY();
 
         for (int[] offset : offsets) {
             int playerMoveX = playerX + offset[0], playerMoveY = playerY + offset[1];
@@ -185,7 +193,7 @@ public class Game {
             }
         }
 
-        Square square = player.getLastMove(); // Source square
+        Square square = player.getCurrentSquare(); // Source square
         squaresVisited[square.getY()][square.getX()] = true;
         distanceToGoal[square.getY()][square.getX()] = 0;
         squaresQueue.add(square);
@@ -198,7 +206,7 @@ public class Game {
             }
             for (Direction direction : Direction.values()) {
                 Square neighbor = square.getNeighbor(direction);
-                if (neighbor != null && !squaresVisited[neighbor.getY()][neighbor.getX()] && neighbor.getValue() == BoardFill.EMPTY.value()) {
+                if (neighbor != null && !squaresVisited[neighbor.getY()][neighbor.getX()]) { //  && neighbor.getValue() == BoardFill.EMPTY.value()
                     squaresVisited[neighbor.getY()][neighbor.getX()] = true;
                     distanceToGoal[neighbor.getY()][neighbor.getX()] = distanceToGoal[square.getY()][square.getX()] + 1;
                     squaresQueue.add(neighbor);
@@ -229,12 +237,15 @@ public class Game {
 
     public void doMove(Move move) {
         // TODO: Comments
-        int x = move.getX(), y = move.getY();
+        int newX = move.getX(), newY = move.getY();
         Player player = getPlayer(this.currentTurn);
-        int lastX = player.getLastMove().getX(), lastY = player.getLastMove().getY();
-        this.board.getSquares()[y][x].setValue(this.currentTurn);
+        int lastX = player.getCurrentSquare().getX(), lastY = player.getCurrentSquare().getY();
+        this.board.getSquares()[newY][newX].setValue(this.currentTurn);
         this.board.getSquares()[lastY][lastX].setValue(BoardFill.EMPTY.value());
-        player.setLastTurn(this.board.getSquares()[y][x]);
+
+        player.setLastSquare(this.board.getSquares()[lastY][lastX]);
+        player.setCurrentSquare(this.board.getSquares()[newY][newX]);
+        player.setLastMove(move);
     }
 
     public boolean isValidWall(Move move) {
@@ -257,7 +268,8 @@ public class Game {
         // TODO: Comments, Efficient
         // The function places the wall on the board (by changing neighbors to null)
         int moveX = move.getX(), moveY = move.getY();
-        getPlayer(this.currentTurn).decWallLeft();
+        Player player = getPlayer(this.currentTurn);
+        player.decWallsLeft();
         this.board.getSquares()[moveY][moveX].setWallPlaced(true);
         if (move.getOrientation() == Orientation.HORIZONTAL) {
             this.board.getSquares()[moveY][moveX].setNeighbor(Direction.DOWN, null);
@@ -270,6 +282,26 @@ public class Game {
             this.board.getSquares()[moveY + 1][moveX].setNeighbor(Direction.RIGHT, null);
             this.board.getSquares()[moveY + 1][moveX + 1].setNeighbor(Direction.LEFT, null);
         }
+        player.setLastMove(move);
+    }
+
+    public void doRemoveWall(Move move) {
+        int moveX = move.getX(), moveY = move.getY();
+        Player player = getPlayer(this.currentTurn);
+        Square[][] squares = this.board.getSquares();
+        player.incWallsLeft();
+        squares[moveY][moveX].setWallPlaced(false);
+        if (move.getOrientation() == Orientation.HORIZONTAL) {
+            squares[moveY][moveX].setNeighbor(Direction.DOWN, squares[moveY + 1][moveX]);
+            squares[moveY][moveX + 1].setNeighbor(Direction.DOWN, squares[moveY + 1][moveX + 1]);
+            squares[moveY + 1][moveX].setNeighbor(Direction.UP, squares[moveY][moveX]);
+            squares[moveY + 1][moveX + 1].setNeighbor(Direction.UP, squares[moveY][moveX + 1]);
+        } else {
+            squares[moveY][moveX].setNeighbor(Direction.RIGHT, squares[moveY][moveX + 1]);
+            squares[moveY][moveX + 1].setNeighbor(Direction.LEFT, squares[moveY][moveX]);
+            squares[moveY + 1][moveX].setNeighbor(Direction.RIGHT, squares[moveY + 1][moveX + 1]);
+            squares[moveY + 1][moveX + 1].setNeighbor(Direction.LEFT, squares[moveY + 1][moveX]);
+        }
     }
 
     public void reset() {
@@ -278,7 +310,8 @@ public class Game {
         this.turnsCounter = 0;
         // Who plays first is chosen randomly: (int) (Math.random() * (max - min + 1) + min)
         this.currentTurn = (int) (Math.random() * (BoardFill.PLAYER2.value()) + BoardFill.PLAYER1.value());
-        this.board.resetBoard();
+        this.board = new Board();
+        this.movesList = new ArrayList<>();
         placePlayersOnBoard();
     }
 }

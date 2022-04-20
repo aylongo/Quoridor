@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class GameHandler implements ActionListener {
     private final int MODE_AI = 1;
     private final int MODE_TWO_PLAYERS = 2;
-    private final int AI_DEPTH = 2;
+    private final int AI_DEPTH = 4;
 
     private Game game;
     private GameGraphics graphics;
@@ -27,6 +27,8 @@ public class GameHandler implements ActionListener {
         // The function handles buttons clicks
         if (e.getSource() == graphics.getRotateButton())
             handleRotate();
+        else if (e.getSource() == graphics.getUndoButton())
+            handleUndo();
         else if (e.getSource() == graphics.getContinueButton())
             handleContinue();
         else if (e.getSource() == graphics.getPlayAIButton())
@@ -49,6 +51,7 @@ public class GameHandler implements ActionListener {
             Move move = new Move(buttonMoveX / 2, buttonMoveY / 2, orientation);
             doPlaceWall(move, buttonX, buttonY);
         }
+
     }
 
     private void handleRotate() {
@@ -59,7 +62,32 @@ public class GameHandler implements ActionListener {
         resetGame(mode);
     }
 
+    private void handleUndo() {
+        Player player = this.game.getPlayer(this.game.getCurrentTurn());
+        Move lastMove = player.getLastMove();
+
+        if (lastMove.isWall()) {
+            int lastMoveButtonX = lastMove.getX() * 2, lastMoveButtonY = lastMove.getY() * 2;
+            doRemoveWall(lastMove, lastMoveButtonX + 1, lastMoveButtonY + 1);
+        } else {
+            Square lastSquare = this.game.getPlayer(this.game.getCurrentTurn()).getLastSquare();
+            int lastSquareButtonX = lastSquare.getX() * 2, lastSquareButtonY = lastSquare.getY() * 2;
+            Move lastSquareMove = new Move(lastSquareButtonX / 2, lastSquareButtonY / 2);
+            doMoveLastSquare(lastSquareMove, lastSquareButtonX, lastSquareButtonY);
+        }
+
+        this.graphics.updateComment(String.format("Turn Undone: %s", lastMove));
+        this.graphics.getRotateButton().setText("Horizontal");
+        GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), false);
+        GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), false);
+        GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), true);
+        this.graphics.setBoardButtonsEnabled(true);
+        paintValidMoves();
+    }
+
     private void handleContinue() {
+        Player player = this.game.getPlayer(this.game.getCurrentTurn());
+        this.game.addMoveToList(player.getLastMove());
         this.game.incTurns();
         this.graphics.updateComment("");
         this.graphics.getRotateButton().setText("Horizontal");
@@ -75,14 +103,16 @@ public class GameHandler implements ActionListener {
     private void handleGameOver() {
         if (this.game.isGameOver()) {
             this.graphics.setBoardButtonsEnabled(false);
-            this.graphics.updateGameStatus(String.format("PLAYER %d WON!", game.getCurrentTurn()));
+            this.graphics.updateGameStatus(String.format("PLAYER %d WON!", this.game.getCurrentTurn()));
             GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), false);
+            GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), false);
             GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), false);
         } else {
             this.game.updateCurrentTurn();
             this.graphics.setBoardButtonsEnabled(true);
-            this.graphics.updateGameStatus(String.format("Player %d's Turn!", game.getCurrentTurn()));
+            this.graphics.updateGameStatus(String.format("Player %d's Turn!", this.game.getCurrentTurn()));
             GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), false);
+            GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), false);
             GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), true);
             paintValidMoves();
         }
@@ -100,7 +130,7 @@ public class GameHandler implements ActionListener {
         } else {
             doMove(moveAI, moveButtonX, moveButtonY);
         }
-        this.graphics.updateComment(String.format("Turn Made: %s", moveAI.toString()));
+        this.graphics.updateComment(String.format("Turn Made: %s", moveAI));
     }
 
     private void doMove(Move move, int buttonX, int buttonY) {
@@ -109,18 +139,27 @@ public class GameHandler implements ActionListener {
             removeValidMoves();
 
             Player player = this.game.getPlayer(this.game.getCurrentTurn());
-            int lastMoveX = player.getLastMove().getX(), lastMoveY = player.getLastMove().getY();
-            int lastMoveButtonX = lastMoveX * 2, lastMoveButtonY = lastMoveY * 2;
+            int lastSquareX = player.getCurrentSquare().getX(), lastSquareY = player.getCurrentSquare().getY();
+            int lastSquareButtonX = lastSquareX * 2, lastSquareButtonY = lastSquareY * 2;
             this.game.doMove(move);
-            this.graphics.removePlayer(lastMoveButtonX, lastMoveButtonY);
-            this.graphics.paintPlayer(buttonX, buttonY, game.getCurrentTurn());
-            this.graphics.updateComment(String.format("Turn Made: %s", move.toString()));
+            this.graphics.removePlayer(lastSquareButtonX, lastSquareButtonY);
+            this.graphics.paintPlayer(buttonX, buttonY, this.game.getCurrentTurn());
+            this.graphics.updateComment(String.format("Turn Made: %s", move));
             GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), true);
+            GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), true);
             GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), false);
-            // TODO: game.addMoveToList(move);
         } else {
             this.graphics.updateComment("Invalid move!");
         }
+    }
+
+    private void doMoveLastSquare(Move move, int buttonX, int buttonY) {
+        Player player = this.game.getPlayer(this.game.getCurrentTurn());
+        int lastSquareX = player.getCurrentSquare().getX(), lastSquareY = player.getCurrentSquare().getY();
+        int lastSquareButtonX = lastSquareX * 2, lastSquareButtonY = lastSquareY * 2;
+        this.game.doMove(move);
+        this.graphics.removePlayer(lastSquareButtonX, lastSquareButtonY);
+        this.graphics.paintPlayer(buttonX, buttonY, this.game.getCurrentTurn());
     }
 
     private void doPlaceWall(Move move, int buttonX, int buttonY) {
@@ -130,14 +169,20 @@ public class GameHandler implements ActionListener {
 
             this.game.doPlaceWall(move);
             this.graphics.paintWall(buttonX, buttonY, move.getOrientation());
-            this.graphics.updateComment(String.format("Turn Made: %s", move.toString()));
+            this.graphics.updateComment(String.format("Turn Made: %s", move));
             this.graphics.updatePlayerWallsLeft(this.game.getCurrentTurn(), this.game.getPlayers()[game.getCurrentTurn()].getWallsLeft());
             GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), true);
+            GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), true);
             GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), false);
-            // TODO: game.addMoveToList(move);
         } else {
             this.graphics.updateComment("Invalid wall!");
         }
+    }
+
+    private void doRemoveWall(Move move, int buttonX, int buttonY) {
+        this.game.doRemoveWall(move);
+        this.graphics.deleteWall(buttonX, buttonY, move.getOrientation());
+        this.graphics.updatePlayerWallsLeft(this.game.getCurrentTurn(), this.game.getPlayers()[game.getCurrentTurn()].getWallsLeft());
     }
 
     private void paintValidMoves() {
@@ -145,7 +190,7 @@ public class GameHandler implements ActionListener {
         for (Move validMove : validMoves) {
             int x = validMove.getX(), y = validMove.getY();
             int buttonX = x * 2, buttonY = y * 2; // Switches to GUI's Board coordinates format
-            this.graphics.setValidMove(buttonX, buttonY, game.getCurrentTurn());
+            this.graphics.setValidMove(buttonX, buttonY, this.game.getCurrentTurn());
         }
     }
 
@@ -180,6 +225,8 @@ public class GameHandler implements ActionListener {
 
         GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), false);
         GameGraphics.setButtonListener(this.graphics.getContinueButton(), this);
+        GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), false);
+        GameGraphics.setButtonListener(this.graphics.getUndoButton(), this);
         GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), true);
         GameGraphics.setButtonListener(this.graphics.getRotateButton(), this);
         this.graphics.updatePlayerWallsLeft(BoardFill.PLAYER1.value(), this.game.getPlayers()[BoardFill.PLAYER1.value()].getWallsLeft());

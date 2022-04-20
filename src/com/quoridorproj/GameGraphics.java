@@ -21,6 +21,7 @@ public class GameGraphics {
     private JButton[][] buttons;
     private JButton continueButton;
     private JButton rotateButton;
+    private JButton undoButton;
     private JButton playAIButton;
     private JButton playTwoPlayersButton;
     private JLabel comment;
@@ -44,6 +45,10 @@ public class GameGraphics {
 
     public JButton getContinueButton() {
         return this.continueButton;
+    }
+
+    public JButton getUndoButton() {
+        return this.undoButton;
     }
 
     public JButton getRotateButton() {
@@ -157,6 +162,8 @@ public class GameGraphics {
         sidePanel.add(this.comment);
         setContinueButton();
         sidePanel.add(this.continueButton);
+        setUndoButton();
+        sidePanel.add(this.undoButton);
         setRotateButton();
         sidePanel.add(this.rotateButton);
         setPlayersWallsLeftLables();
@@ -191,6 +198,13 @@ public class GameGraphics {
         this.continueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         this.continueButton.setFont(new Font("Arial", Font.PLAIN, 15));
         this.continueButton.setBackground(EMPTY_COLOR);
+    }
+
+    private void setUndoButton() {
+        this.undoButton = new JButton("Undo");
+        this.undoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.undoButton.setFont(new Font("Arial", Font.PLAIN, 15));
+        this.undoButton.setBackground(EMPTY_COLOR);
     }
 
     private void setRotateButton() {
@@ -282,13 +296,13 @@ public class GameGraphics {
         this.buttons[y][x].setBackground(EMPTY_COLOR);
     }
 
-    public void removePlayer(int x, int y) {
-        this.buttons[y][x].setBackground(EMPTY_COLOR);
-    }
-
     public void paintPlayer(int x, int y, int currentTurn) {
         Color playerColor = (currentTurn == BoardFill.PLAYER1.value() ? PLAYER1_COLOR : PLAYER2_COLOR);
         this.buttons[y][x].setBackground(playerColor);
+    }
+
+    public void removePlayer(int x, int y) {
+        this.buttons[y][x].setBackground(EMPTY_COLOR);
     }
 
     public void paintWall(int x, int y, Orientation orientation) {
@@ -300,6 +314,18 @@ public class GameGraphics {
             this.buttons[y][x].setBackground(PLACED_WALL_COLOR);
             this.buttons[y + 1][x].setBackground(PLACED_WALL_COLOR);
             this.buttons[y - 1][x].setBackground(PLACED_WALL_COLOR);
+        }
+    }
+
+    public void deleteWall(int x, int y, Orientation orientation) {
+        if (orientation == Orientation.HORIZONTAL) {
+            this.buttons[y][x].setBackground(WALL_COLOR);
+            this.buttons[y][x + 1].setBackground(WALL_COLOR);
+            this.buttons[y][x - 1].setBackground(WALL_COLOR);
+        } else {
+            this.buttons[y][x].setBackground(WALL_COLOR);
+            this.buttons[y + 1][x].setBackground(WALL_COLOR);
+            this.buttons[y - 1][x].setBackground(WALL_COLOR);
         }
     }
 
