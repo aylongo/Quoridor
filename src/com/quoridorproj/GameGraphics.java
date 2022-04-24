@@ -1,6 +1,7 @@
 package com.quoridorproj;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class GameGraphics {
@@ -27,6 +28,8 @@ public class GameGraphics {
     private JLabel comment;
     private JLabel gameStatus;
     private JLabel[] playersWallsLeft;
+    JScrollPane movesListScroller;
+    private JList<String> movesList;
 
     public GameGraphics() {
         this.frame = new JFrame();
@@ -241,6 +244,40 @@ public class GameGraphics {
             playerWallsLeftLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
             this.playersWallsLeft[i] = playerWallsLeftLabel;
         }
+    }
+
+    public void setPostGamePanel(String[] movesArr) {
+        // FIXME
+        JFrame frame = new JFrame();
+        JPanel panel = new JPanel();
+
+        BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
+        panel.setLayout(layout);
+
+        JLabel label = new JLabel("Game Statistics");
+        label.setFont(new Font("Arial", Font.BOLD, 22));
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setBorder(new EmptyBorder(10, 0, 10, 0));
+        panel.add(label);
+
+        this.movesList = new JList<>(movesArr);
+        this.movesList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        this.movesList.setVisibleRowCount(-1);
+        this.movesList.setFont(new Font("Arial", Font.PLAIN, 12));
+        this.movesList.setFixedCellWidth(25);
+        this.movesList.setFixedCellHeight(20);
+        this.movesListScroller = new JScrollPane(this.movesList);
+        this.movesListScroller.setPreferredSize(new Dimension(300, 150));
+        this.movesListScroller.setMaximumSize(new Dimension(300, 150));
+        this.movesListScroller.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.movesListScroller.setVisible(true);
+
+        panel.add(this.movesListScroller);
+        frame.add(panel);
+
+        frame.setSize(new Dimension(420, 420));
+        frame.setResizable(false);
+        frame.setVisible(true);
     }
 
     public void setBoardButtonsEnabled(boolean state) {

@@ -41,6 +41,10 @@ public class Game {
         return this.players[id];
     }
 
+    public ArrayList<Move> getMovesList() {
+        return this.movesList;
+    }
+
     public int getCurrentTurn() {
         return this.currentTurn;
     }
@@ -310,8 +314,8 @@ public class Game {
         this.turnsCounter = 0;
         // Who plays first is chosen randomly: (int) (Math.random() * (max - min + 1) + min)
         this.currentTurn = (int) (Math.random() * (BoardFill.PLAYER2.value()) + BoardFill.PLAYER1.value());
-        this.board = new Board();
         this.movesList = new ArrayList<>();
+        this.board = new Board();
         placePlayersOnBoard();
     }
 }

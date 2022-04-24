@@ -107,6 +107,7 @@ public class GameHandler implements ActionListener {
             GameGraphics.setButtonEnabled(this.graphics.getContinueButton(), false);
             GameGraphics.setButtonEnabled(this.graphics.getUndoButton(), false);
             GameGraphics.setButtonEnabled(this.graphics.getRotateButton(), false);
+            setPostGamePanel();
         } else {
             this.game.updateCurrentTurn();
             this.graphics.setBoardButtonsEnabled(true);
@@ -125,11 +126,11 @@ public class GameHandler implements ActionListener {
         Move moveAI = ai.getBestMove(this.game, AI_DEPTH);
         int moveButtonX = moveAI.getX() * 2, moveButtonY = moveAI.getY() * 2;
 
-        if (moveAI.isWall()) {
+        if (moveAI.isWall())
             doPlaceWall(moveAI, moveButtonX + 1, moveButtonY + 1);
-        } else {
+        else
             doMove(moveAI, moveButtonX, moveButtonY);
-        }
+
         this.graphics.updateComment(String.format("Turn Made: %s", moveAI));
     }
 
@@ -207,6 +208,15 @@ public class GameHandler implements ActionListener {
         return this.graphics.getRotateButton().getText().equals("Horizontal") ? Orientation.HORIZONTAL : Orientation.VERTICAL;
     }
 
+    private void setPostGamePanel() {
+        ArrayList<Move> movesList = this.game.getMovesList();
+        String[] movesArr = new String[movesList.size()];
+        for (int i = 0; i < movesArr.length; i++) {
+            movesArr[i] = movesList.get(i).toString();
+        }
+        this.graphics.setPostGamePanel(movesArr);
+    }
+
     private void setPreGameGraphicsSets() {
         this.graphics.setSidePanelVisibility(false);
         this.graphics.setPreGameSidePanelVisibility(true);
@@ -240,8 +250,8 @@ public class GameHandler implements ActionListener {
     }
 
     private void resetGame(int mode) {
-        this.graphics.reset();
         this.game.reset();
+        this.graphics.reset();
         this.mode = mode;
         setGameGraphicsSets();
 
