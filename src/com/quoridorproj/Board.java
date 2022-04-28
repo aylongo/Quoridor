@@ -6,7 +6,13 @@ public class Board {
     private Square[][] squares;
 
     public Board() {
-        reset();
+        this.squares = new Square[SQUARES_SIZE][SQUARES_SIZE];
+        for (int i = 0; i < SQUARES_SIZE; i++) {
+            for (int j = 0; j < SQUARES_SIZE; j++) {
+                this.squares[i][j] = new Square(j, i);
+            }
+        }
+        configureSquaresNeighbors();
     }
 
     private Board(Board board) {
@@ -84,15 +90,5 @@ public class Board {
 
     public int getSquaresSize() {
         return this.SQUARES_SIZE;
-    }
-
-    private void reset() {
-        this.squares = new Square[SQUARES_SIZE][SQUARES_SIZE];
-        for (int i = 0; i < SQUARES_SIZE; i++) {
-            for (int j = 0; j < SQUARES_SIZE; j++) {
-                this.squares[i][j] = new Square(j, i);
-            }
-        }
-        configureSquaresNeighbors();
     }
 }

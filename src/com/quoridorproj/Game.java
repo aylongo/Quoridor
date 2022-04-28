@@ -11,11 +11,19 @@ public class Game {
     private int currentTurn;
     private int turnsCounter;
 
+    /**
+     * Game Class Constructor
+     */
     public Game() {
         this.players = new Player[3];
         reset();
     }
 
+    /**
+     * Game Class Constructor specifying the game object to get the data from
+     *
+     * @param game Game object to make duplicate from
+     */
     private Game(Game game) {
         this.board = game.board.duplicate();
         this.players = new Player[3];
@@ -25,43 +33,37 @@ public class Game {
         this.turnsCounter = game.turnsCounter;
     }
 
+    /**
+     * The function returns a game clone of the function calling object
+     *
+     * @return Game object clone
+     */
     public Game duplicate() {
         return new Game(this);
     }
 
-    public Board getBoard() {
-        return this.board;
-    }
+    public Board getBoard() { return this.board; }
 
-    public Player[] getPlayers() {
-        return this.players;
-    }
+    public Player[] getPlayers() { return this.players; }
 
-    public Player getPlayer(int id) {
-        return this.players[id];
-    }
+    public Player getPlayer(int id) { return this.players[id]; }
 
-    public ArrayList<Move> getMovesList() {
-        return this.movesList;
-    }
+    public ArrayList<Move> getMovesList() { return this.movesList; }
 
-    public int getCurrentTurn() {
-        return this.currentTurn;
-    }
+    public int getCurrentTurn() { return this.currentTurn; }
 
-    public int getTurnsCounter() {
-        return this.turnsCounter;
-    }
+    public int getTurnsCounter() { return this.turnsCounter; }
 
-    public void incTurns() {
-        this.turnsCounter++;
-    }
+    public void incTurns() { this.turnsCounter++; }
 
     public int getWinRow(int playerID) {
         int size = this.board.getSquaresSize();
         return playerID == BoardFill.PLAYER1.value() ? 0 : size - 1;
     }
 
+    /**
+     * The function places the players on the board on their starting positions
+     */
     private void placePlayersOnBoard() {
         Square[][] squares = this.board.getSquares();
         int size = this.board.getSquaresSize();
@@ -86,8 +88,13 @@ public class Game {
             return (playerRow < playerWinRow && playerRow >= size / 2);
     }
 
+    /**
+     * The function checks if the game was ended
+     * A game ends when one of the players reaches one of the squares opposite to his baseline (his starting line)
+     *
+     * @return True if the game was ended and False if otherwise
+     */
     public boolean isGameOver() {
-        // Game ends when one of the players reaches one of the squares opposite to his baseline (his starting line)
         int playerOneRow = getPlayer(BoardFill.PLAYER1.value()).getCurrentSquare().getY();
         int playerTwoRow = getPlayer(BoardFill.PLAYER2.value()).getCurrentSquare().getY();
 
@@ -98,15 +105,35 @@ public class Game {
         return false;
     }
 
+    /**
+     * The function switches the current player turn
+     */
     public void updateCurrentTurn() {
         this.currentTurn++;
         if (this.currentTurn > BoardFill.PLAYER2.value())
             this.currentTurn = 1;
     }
 
+    /**
+     * The function searches for the possible turns of the player
+     *
+     * @param playerID The ID of the player that the function will work on
+     * @return A list of the whole player's possible turns (moves and walls place)
+     */
+    public ArrayList<Move> getPossibleTurns(int playerID) {
+        ArrayList<Move> moves = new ArrayList<>();
+        moves.addAll(getPossibleWalls(playerID));
+        moves.addAll(getValidMoves(playerID));
+        return moves;
+    }
+
+    /**
+     * The function searches for the valid moves of the player and returns it as a List of Moves
+     *
+     * @param playerID The ID of the player that the function will work on
+     * @return A list of the player's valid moves
+     */
     public ArrayList<Move> getValidMoves(int playerID) {
-        // TODO: Comments
-        // The function returns a list of the valid moves for the current player
         Player player = getPlayer(playerID);
         ArrayList<Move> validMoves = new ArrayList<>();
         Move move;
@@ -138,11 +165,17 @@ public class Game {
         return validMoves;
     }
 
+    /**
+     * The function searches for the possible walls to place for the player and returns it as a List of Moves
+     *
+     * @param playerID The ID of the player that the function will work on
+     * @return A list of the player's possible walls
+     */
     private ArrayList<Move> getPossibleWalls(int playerID) {
         int size = this.board.getSquaresSize();
         Player player = getPlayer(playerID);
         Player opponent = getPlayer((this.players.length - 1) - playerID + 1);
-        int[][] offsets = new int[][] {{-1, -1}, {-1, 0}, {0, -1}, {0, 0},};
+        int[][] offsets = new int[][] {{-1, -1}, {-1, 0}, {0, -1}, {0, 0}};
         ArrayList<Move> moves = new ArrayList<>();
 
         if (player.getWallsLeft() == 0)
@@ -152,6 +185,7 @@ public class Game {
         int playerY = player.getCurrentSquare().getY(), opponentY = opponent.getCurrentSquare().getY();
 
         for (int[] offset : offsets) {
+            // Searches for walls around the player's position
             int playerMoveX = playerX + offset[0], playerMoveY = playerY + offset[1];
             if ((playerMoveX >= 0 && playerMoveX < size - 1) && (playerMoveY >= 0 && playerMoveY < size - 1)) {
                 Move horizontalWallMove = new Move(playerMoveX, playerMoveY, Orientation.HORIZONTAL);
@@ -161,6 +195,7 @@ public class Game {
                 if (!moves.contains(verticalWallMove) && isValidWall(verticalWallMove))
                     moves.add(verticalWallMove);
             }
+            // Searches for walls around the opponent's position
             int opponentMoveX = opponentX + offset[0], opponentMoveY = opponentY + offset[1];
             if ((opponentMoveX >= 0 && opponentMoveX < size - 1) && (opponentMoveY >= 0 && opponentMoveY < size - 1)) {
                 Move horizontalWallMove = new Move(opponentMoveX, opponentMoveY, Orientation.HORIZONTAL);
@@ -174,15 +209,14 @@ public class Game {
         return moves;
     }
 
-    public ArrayList<Move> getPossibleTurns(int playerID) {
-        ArrayList<Move> moves = new ArrayList<>();
-        moves.addAll(getPossibleWalls(playerID));
-        moves.addAll(getValidMoves(playerID));
-        return moves;
-    }
-
+    /**
+     * The function searches for the shortest path for the player's goal
+     * It uses the BFS (Breadth-First Search) algorithm
+     *
+     * @param playerID The ID of the player that the function will work on
+     * @return If a path exists, returns a tuple which contains the length of the shortest path to the player's goal and the goal square that the function reached during the iteration and null if path doesn't exist
+     */
     public Tuple<Integer, Square> getShortestPathToGoal(int playerID) {
-        // The function uses the BFS (Breadth-First Search) method to return the player's shortest path to his goal
         Player player = getPlayer(playerID);
         int size = this.board.getSquaresSize();
         int winRow = getWinRow(playerID);
@@ -220,27 +254,25 @@ public class Game {
         return null;
     }
 
+    /**
+     * The function checks if the player is blocked (from reaching to the goal) after placing the wall represented in the given move object
+     *
+     * @param playerID The ID of the player that the function will work on
+     * @param move The wall move object
+     * @return True if the player is blocked and False if otherwise
+     */
     private boolean isTrapped(int playerID, Move move) {
-        // The function checks if the player is blocked (between walls). Returns true if the player is trapped and false if otherwise
         Game gameDuplicate = this.duplicate();
         gameDuplicate.doPlaceWall(move);
         return gameDuplicate.getShortestPathToGoal(playerID) == null;
     }
 
-    public boolean isValidMove(Move move) {
-        // TODO: Comments
-        if (move.isWall())
-            return false;
-        ArrayList<Move> validMoves = this.getValidMoves(this.currentTurn);
-        for (Move validMove : validMoves) {
-            if (move.equals(validMove))
-                return true;
-        }
-        return false;
-    }
-
+    /**
+     * The function makes a move turn on the game board
+     *
+     * @param move The Move object
+     */
     public void doMove(Move move) {
-        // TODO: Comments
         int newX = move.getX(), newY = move.getY();
         Player player = getPlayer(this.currentTurn);
         int lastX = player.getCurrentSquare().getX(), lastY = player.getCurrentSquare().getY();
@@ -252,25 +284,29 @@ public class Game {
         player.setLastMove(move);
     }
 
-    public boolean isValidWall(Move move) {
-        // The function checks if a wall can be placed in the chosen place. Checks if at least one of the players is trapped and if the requested wall is placed over other past walls
-        if (!move.isWall() || getPlayer(this.currentTurn).getWallsLeft() == 0)
+    /**
+     * The function checks if the given move is a valid move turn
+     *
+     * @param move The tested Move object
+     * @return True if the move is valid and False if otherwise
+     */
+    public boolean isValidMove(Move move) {
+        if (move.isWall())
             return false;
-        int moveX = move.getX(), moveY = move.getY();
-        if (this.board.getSquares()[moveY][moveX].isWallPlaced())
-            return false;
-        if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Checks if horizontally wall was placed
-            return false;
-        if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Checks if vertically wall was placed
-            return false;
-        if (isTrapped(BoardFill.PLAYER1.value(), move) || isTrapped(BoardFill.PLAYER2.value(), move)) // Checks if at least one of the players is trapped between walls
-            return false;
-        return true;
+        ArrayList<Move> validMoves = this.getValidMoves(this.currentTurn);
+        for (Move validMove : validMoves) {
+            if (move.equals(validMove))
+                return true;
+        }
+        return false;
     }
 
+    /**
+     * The function makes a wall placing turn on the game board (by changing squares' neighbors to null)
+     *
+     * @param move The wall Move object
+     */
     public void doPlaceWall(Move move) {
-        // TODO: Comments, Efficient
-        // The function places the wall on the board (by changing neighbors to null)
         int moveX = move.getX(), moveY = move.getY();
         Player player = getPlayer(this.currentTurn);
         player.decWallsLeft();
@@ -289,6 +325,33 @@ public class Game {
         player.setLastMove(move);
     }
 
+    /**
+     * The function checks if the given move is a valid wall placing turn (checks if a wall can be placed in the chosen place)
+     * It checks if at least one of the players is trapped and if the requested wall is placed over other past walls
+     *
+     * @param move The tested wall Move object
+     * @return True if the move is valid and False if otherwise
+     */
+    public boolean isValidWall(Move move) {
+        if (!move.isWall() || getPlayer(this.currentTurn).getWallsLeft() == 0)
+            return false;
+        int moveX = move.getX(), moveY = move.getY();
+        if (this.board.getSquares()[moveY][moveX].isWallPlaced())
+            return false;
+        if (move.getOrientation() == Orientation.HORIZONTAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.DOWN) == null || this.board.getSquares()[moveY][moveX + 1].getNeighbor(Direction.DOWN) == null)) // Checks if horizontally wall was placed
+            return false;
+        if (move.getOrientation() == Orientation.VERTICAL && (this.board.getSquares()[moveY][moveX].getNeighbor(Direction.RIGHT) == null || this.board.getSquares()[moveY + 1][moveX].getNeighbor(Direction.RIGHT) == null)) // Checks if vertically wall was placed
+            return false;
+        if (isTrapped(BoardFill.PLAYER1.value(), move) || isTrapped(BoardFill.PLAYER2.value(), move)) // Checks if at least one of the players is trapped between walls
+            return false;
+        return true;
+    }
+
+    /**
+     * The function removes a wall from the game board
+     *
+     * @param move The wall Move object
+     */
     public void doRemoveWall(Move move) {
         int moveX = move.getX(), moveY = move.getY();
         Player player = getPlayer(this.currentTurn);
@@ -308,6 +371,9 @@ public class Game {
         }
     }
 
+    /**
+     * The function resets the game object
+     */
     public void reset() {
         this.players[BoardFill.PLAYER1.value()] = new Player(BoardFill.PLAYER1.value());
         this.players[BoardFill.PLAYER2.value()] = new Player(BoardFill.PLAYER2.value());

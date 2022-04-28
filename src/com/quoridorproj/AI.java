@@ -3,13 +3,18 @@ package com.quoridorproj;
 import java.util.ArrayList;
 
 public class AI {
-    private final int FEATURES_SIZE = 5;
-    private final double MAX_SCORE = 1000000;
-    private final double MIN_SCORE = -1000000;
+    private final double MAX_SCORE = 1000000; // Maximum possible score for a game state
+    private final double MIN_SCORE = -1000000; // Minimum possible score for a game state
 
-    private int maxPlayer;
-    private int minPlayer;
+    private int maxPlayer; // represents the AI player
+    private int minPlayer; // represents the User player
 
+    /**
+     * AI Class Constructor
+     *
+     * @param maxPlayer AI player's ID
+     * @param minPlayer User player's ID
+     */
     public AI(int maxPlayer, int minPlayer) {
         this.maxPlayer = maxPlayer;
         this.minPlayer = minPlayer;
@@ -19,6 +24,13 @@ public class AI {
         return this.maxPlayer;
     }
 
+    /**
+     * The function searches for the best move that the AI player should play using a Minimax function
+     *
+     * @param game Current state of the game
+     * @param depth Number of turns ahead to search. How deep does the Minimax function play through the game
+     * @return The best move (with the highest score) among the possible moves
+     */
     public Move getBestMove(Game game, int depth) {
         double bestScore = Double.NEGATIVE_INFINITY;
         Move bestMove = null;
@@ -46,6 +58,17 @@ public class AI {
         return bestMove;
     }
 
+    /**
+     * The function simulates the game, using recursion, and plays the possible turns in the depth given.
+     * When depth reaches zero or the game was ended, the function returns the evaluation (score) of the final game state it reached using a heuristic function.
+     *
+     * @param game Current state of the game
+     * @param depth Number of turns ahead to search. How deep does the function play through the game
+     * @param alpha Negative infinity
+     * @param beta Positive infinity
+     * @param maximizingPlayer True if it's the AI player's turn and False if otherwise
+     * @return The best value (score) out of the origin (root) game state
+     */
     private double minimax(Game game, int depth, double alpha, double beta, boolean maximizingPlayer) {
         if (depth == 0 || game.isGameOver())
             return evaluate(game, depth);
@@ -95,13 +118,19 @@ public class AI {
         }
     }
 
+    /**
+     * The function evaluates the given game state according to the AI player's and User player's progress to their goal
+     * @param game State of game
+     * @param depth Number of turns ahead to finish the search
+     * @return The score of this specific game state
+     */
     private double evaluate(Game game, int depth) {
-        int size = game.getBoard().getSquaresSize();
-
         int playerRow = game.getPlayer(this.maxPlayer).getLastMove().getY();
         int opponentRow = game.getPlayer(this.minPlayer).getLastMove().getY();
 
-        if (game.isGameOver()) {
+        int playerNumWalls = game.getPlayer(this.maxPlayer).getWallsLeft();
+
+        if (game.isGameOver() && playerNumWalls > 0) {
             if (playerRow == game.getWinRow(this.maxPlayer))
                 return MAX_SCORE + depth;
             else if (opponentRow == game.getWinRow(this.minPlayer))
@@ -114,27 +143,9 @@ public class AI {
         int playerShortestPathToGoal = tuplePlayerShortestPath != null ? tuplePlayerShortestPath.x : Integer.MIN_VALUE;
         int opponentShortestPathToGoal = tupleOpponentShortestPath != null ? tupleOpponentShortestPath.x : Integer.MIN_VALUE;
 
-        // FIXME: With 0 walls the AI GOES CRAZY
-        if (game.getPlayer(this.maxPlayer).getWallsLeft() > 0)
+        if (playerNumWalls > 0)
             return (opponentShortestPathToGoal - playerShortestPathToGoal) + Math.random();
         else
             return Math.pow(playerShortestPathToGoal, -1);
-    }
-
-    private int[] getFeatures(Game game) {
-        int playerRow = game.getPlayer(this.maxPlayer).getLastMove().getY();
-        int opponentRow = game.getPlayer(this.minPlayer).getLastMove().getY();
-
-        Tuple<Integer, Square> tuplePlayerSPG = game.getShortestPathToGoal(this.maxPlayer);
-        Tuple<Integer, Square> tupleOpponentSPG = game.getShortestPathToGoal(this.minPlayer);
-
-        int playerShortestPathToGoal = tuplePlayerSPG != null ? tuplePlayerSPG.x : Integer.MIN_VALUE;
-        int opponentShortestPathToGoal = tupleOpponentSPG != null ? tupleOpponentSPG.x : Integer.MIN_VALUE;
-        int playerManhattanDistance = Math.abs(game.getWinRow(this.maxPlayer) - playerRow);
-        int opponentManhattanDistance = Math.abs(game.getWinRow(this.minPlayer) - opponentRow);
-        int playerNumOfWalls = game.getPlayer(this.maxPlayer).getWallsLeft();
-        int opponentNumOfWalls = game.getPlayer(this.minPlayer).getWallsLeft();
-
-        return new int[] {playerShortestPathToGoal, opponentShortestPathToGoal, playerManhattanDistance, opponentManhattanDistance, playerNumOfWalls, opponentNumOfWalls};
     }
 }

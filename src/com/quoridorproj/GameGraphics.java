@@ -1,82 +1,78 @@
 package com.quoridorproj;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class GameGraphics {
     private final int BOARD_SIZE = 17;
-    // TODO: Colors HashMap
-    private final Color EMPTY_COLOR = new Color(224, 224, 224);
-    private final Color WALL_COLOR = new Color(192, 192, 192);
-    private final Color PLACED_WALL_COLOR = new Color(105, 105, 105, 255);
-    private final Color PLAYER1_COLOR = new Color(255, 64, 64);
-    private final Color PLAYER2_COLOR = new Color(51, 153, 255);
-    private final Color VALID_MOVE_PLAYER1_COLOR = new Color(255, 195, 139);
-    private final Color VALID_MOVE_PLAYER2_COLOR = new Color(198, 226, 255);
+    private ColorMap colorMap;
 
+    private GameHandler context;
     private JFrame frame;
-    private JPanel panel;
-    private JPanel preGameSidePanel;
-    private JPanel sidePanel;
+    private JPanel mainPanel;
     private JButton[][] buttons;
-    private JButton continueButton;
-    private JButton rotateButton;
-    private JButton undoButton;
-    private JButton playAIButton;
-    private JButton playTwoPlayersButton;
-    private JLabel comment;
-    private JLabel gameStatus;
-    private JLabel[] playersWallsLeft;
-    JScrollPane movesListScroller;
-    private JList<String> movesList;
+    private PreGamePanel preGamePanel;
+    private SidePanel sidePanel;
+    private PostGamePanel postGamePanel;
 
-    public GameGraphics() {
+    public GameGraphics(GameHandler context) {
+        this.colorMap = new ColorMap();
+        this.context = context;
         this.frame = new JFrame();
-        this.panel = new JPanel(new FlowLayout());
+        this.mainPanel = new JPanel(new FlowLayout());
+
+        this.preGamePanel = new PreGamePanel();
+        this.sidePanel = new SidePanel();
+        this.postGamePanel = new PostGamePanel();
+
         addBoardButtons();
         setBoardButtonsColor();
+        setPreGamePanel(true, true);
 
-        setSidePanel();
-        setPreGameSidePanel();
         setFrame();
     }
 
-    public JButton[][] getButtons() {
-        return this.buttons;
+    public JPanel getPreGamePanel() { return this.preGamePanel.getPreGamePanel(); }
+
+    public void setPreGamePanel(boolean playAIButtonState, boolean playTwoPlayersButtonState) {
+        this.preGamePanel.setPreGamePanel(this.context, this.mainPanel);
+        setButtonEnabled(getPlayAIButton(), playAIButtonState);
+        setButtonEnabled(getPlayTwoPlayersButton(), playTwoPlayersButtonState);
+        setBoardButtonsEnabled(false);
     }
 
-    public JButton getContinueButton() {
-        return this.continueButton;
+    public JPanel getSidePanel() { return this.sidePanel.getSidePanel(); }
+
+    public void setSidePanel(boolean continueButtonState, boolean rotateButtonState, boolean undoButtonState) {
+        this.sidePanel.setSidePanel(this.context, this.mainPanel);
+        setButtonEnabled(getContinueButton(), continueButtonState);
+        setButtonEnabled(getRotateButton(), rotateButtonState);
+        setButtonEnabled(getUndoButton(), undoButtonState);
+        setBoardButtonsEnabled(true);
     }
 
-    public JButton getUndoButton() {
-        return this.undoButton;
+    public JPanel getPostGamePanel() { return this.postGamePanel.getPostGamePanel();}
+
+    public void setPostGamePanel(int winnerID, int numTurns) {
+        this.postGamePanel.setPostGamePanel(this.mainPanel, winnerID, numTurns);
+        setBoardButtonsEnabled(false);
     }
 
-    public JButton getRotateButton() {
-        return this.rotateButton;
-    }
+    public JButton getPlayAIButton() { return this.preGamePanel.getPlayAIButton(); }
 
-    public JButton getPlayAIButton() { return this.playAIButton; }
+    public JButton getPlayTwoPlayersButton() { return this.preGamePanel.getPlayTwoPlayersButton(); }
 
-    public JButton getPlayTwoPlayersButton() { return this.playTwoPlayersButton; }
+    public JButton getContinueButton() { return this.sidePanel.getContinueButton(); }
 
-    private void setFrame() {
-        this.frame.setTitle("Quoridor");
-        this.frame.setSize(1300, 1000);
-        this.frame.setFocusable(true);
-        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.frame.setResizable(false);
-        this.frame.setVisible(true);
-        this.frame.add(this.panel);
-    }
+    public JButton getUndoButton() { return this.sidePanel.getUndoButton(); }
+
+    public JButton getRotateButton() { return this.sidePanel.getRotateButton(); }
 
     private void addBoardButtons() {
         JPanel boardPanel = new JPanel(new GridBagLayout());
         boardPanel.setSize(1000, 1000);
         setBoardButtons(boardPanel);
-        this.panel.add(boardPanel, BorderLayout.WEST); // After adding the buttons to the panel, it adds the panel to the frame
+        this.mainPanel.add(boardPanel, BorderLayout.WEST); // After adding the buttons to the panel, it adds the panel to the frame
     }
 
     private void setBoardButtons(JPanel boardPanel) {
@@ -111,173 +107,25 @@ public class GameGraphics {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 Color buttonColor;
                 if (i % 2 == 0 && j % 2 == 0)
-                    buttonColor = EMPTY_COLOR;
+                    buttonColor = this.colorMap.get(ColorEnum.EMPTY_COLOR);
                 else
-                    buttonColor = WALL_COLOR;
+                    buttonColor = this.colorMap.get(ColorEnum.WALL_COLOR);
 
                 this.buttons[i][j].setBackground(buttonColor);
             }
         }
-        this.buttons[BOARD_SIZE - 1][BOARD_SIZE / 2].setBackground(PLAYER1_COLOR);
-        this.buttons[0][BOARD_SIZE / 2].setBackground(PLAYER2_COLOR);
+        this.buttons[BOARD_SIZE - 1][BOARD_SIZE / 2].setBackground(this.colorMap.get(ColorEnum.PLAYER1_COLOR));
+        this.buttons[0][BOARD_SIZE / 2].setBackground(this.colorMap.get(ColorEnum.PLAYER2_COLOR));
     }
 
-    private void setPreGameSidePanel() {
-        // Sets an outer panel to hold the pre-game side panel
-        this.preGameSidePanel = new JPanel();
-        this.preGameSidePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 15));
-
-        // Sets the panel
-        JPanel preGameSidePanel = new JPanel();
-        preGameSidePanel.setLayout(new FlowLayout());
-        preGameSidePanel.setPreferredSize(new Dimension(300, 400));
-        preGameSidePanel.setMaximumSize(new Dimension(300, 400));
-        preGameSidePanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.GRAY));
-        preGameSidePanel.setBackground(WALL_COLOR);
-
-        // Adds the components to the panel
-        setPlayAIButton();
-        preGameSidePanel.add(this.playAIButton);
-        setPlayTwoPlayersButton();
-        preGameSidePanel.add(this.playTwoPlayersButton);
-
-        this.preGameSidePanel.add(preGameSidePanel);
-        this.panel.add(this.preGameSidePanel, BorderLayout.EAST);
-    }
-
-    private void setSidePanel() {
-        // Sets an outer panel to hold the side panel
-        this.sidePanel = new JPanel();
-        this.sidePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 15));
-
-        // Sets the side panel
-        JPanel sidePanel = new JPanel();
-        sidePanel.setLayout(new FlowLayout());
-        sidePanel.setPreferredSize(new Dimension(300, 400));
-        sidePanel.setMaximumSize(new Dimension(300, 400));
-        sidePanel.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.GRAY));
-        sidePanel.setBackground(WALL_COLOR);
-
-        // Adds the components to the side panel
-        setGameStatusLabel();
-        sidePanel.add(this.gameStatus);
-        setCommentLabel();
-        sidePanel.add(this.comment);
-        setContinueButton();
-        sidePanel.add(this.continueButton);
-        setUndoButton();
-        sidePanel.add(this.undoButton);
-        setRotateButton();
-        sidePanel.add(this.rotateButton);
-        setPlayersWallsLeftLables();
-        sidePanel.add(this.playersWallsLeft[BoardFill.PLAYER1.value()]);
-        sidePanel.add(this.playersWallsLeft[BoardFill.PLAYER2.value()]);
-
-        this.sidePanel.add(sidePanel);
-        this.panel.add(this.sidePanel, BorderLayout.EAST);
-    }
-
-    private void setGameStatusLabel() {
-        this.gameStatus = new JLabel("", JLabel.CENTER);
-        this.gameStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.gameStatus.setAlignmentY(Component.TOP_ALIGNMENT);
-        this.gameStatus.setPreferredSize(new Dimension(290, 80));
-        this.gameStatus.setMaximumSize(new Dimension(290, 80));
-        this.gameStatus.setFont(new Font("Arial", Font.BOLD, 22));
-        this.gameStatus.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-    }
-
-    private void setCommentLabel() {
-        this.comment = new JLabel("", JLabel.CENTER);
-        this.comment.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.comment.setPreferredSize(new Dimension(290, 80));
-        this.comment.setMaximumSize(new Dimension(290, 80));
-        this.comment.setFont(new Font("Arial", Font.PLAIN, 16));
-        this.comment.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-    }
-
-    private void setContinueButton() {
-        this.continueButton = new JButton("Continue");
-        this.continueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.continueButton.setFont(new Font("Arial", Font.PLAIN, 15));
-        this.continueButton.setBackground(EMPTY_COLOR);
-    }
-
-    private void setUndoButton() {
-        this.undoButton = new JButton("Undo");
-        this.undoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.undoButton.setFont(new Font("Arial", Font.PLAIN, 15));
-        this.undoButton.setBackground(EMPTY_COLOR);
-    }
-
-    private void setRotateButton() {
-        this.rotateButton = new JButton("Horizontal");
-        this.rotateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.rotateButton.setFont(new Font("Arial", Font.PLAIN, 15));
-        this.rotateButton.setBackground(EMPTY_COLOR);
-    }
-
-    private void setPlayAIButton() {
-        this.playAIButton = new JButton("Play Against AI");
-        this.playAIButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.playAIButton.setFont(new Font("Arial", Font.PLAIN, 15));
-        this.playAIButton.setBackground(EMPTY_COLOR);
-    }
-
-    private void setPlayTwoPlayersButton() {
-        this.playTwoPlayersButton = new JButton("Play 2 Players");
-        this.playTwoPlayersButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.playTwoPlayersButton.setFont(new Font("Arial", Font.PLAIN, 15));
-        this.playTwoPlayersButton.setBackground(EMPTY_COLOR);
-    }
-
-    private void setPlayersWallsLeftLables() {
-        JLabel playerWallsLeftLabel;
-        this.playersWallsLeft = new JLabel[3];
-
-        for (int i = BoardFill.PLAYER1.value(); i < 3; i++) {
-            playerWallsLeftLabel = new JLabel("", JLabel.CENTER);
-            playerWallsLeftLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            playerWallsLeftLabel.setPreferredSize(new Dimension(290, 80));
-            playerWallsLeftLabel.setMaximumSize(new Dimension(290, 80));
-            playerWallsLeftLabel.setFont(new Font("Arial", Font.BOLD, 16));
-            playerWallsLeftLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-            this.playersWallsLeft[i] = playerWallsLeftLabel;
-        }
-    }
-
-    public void setPostGamePanel(String[] movesArr) {
-        // FIXME
-        JFrame frame = new JFrame();
-        JPanel panel = new JPanel();
-
-        BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
-        panel.setLayout(layout);
-
-        JLabel label = new JLabel("Game Statistics");
-        label.setFont(new Font("Arial", Font.BOLD, 22));
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label.setBorder(new EmptyBorder(10, 0, 10, 0));
-        panel.add(label);
-
-        this.movesList = new JList<>(movesArr);
-        this.movesList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        this.movesList.setVisibleRowCount(-1);
-        this.movesList.setFont(new Font("Arial", Font.PLAIN, 12));
-        this.movesList.setFixedCellWidth(25);
-        this.movesList.setFixedCellHeight(20);
-        this.movesListScroller = new JScrollPane(this.movesList);
-        this.movesListScroller.setPreferredSize(new Dimension(300, 150));
-        this.movesListScroller.setMaximumSize(new Dimension(300, 150));
-        this.movesListScroller.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.movesListScroller.setVisible(true);
-
-        panel.add(this.movesListScroller);
-        frame.add(panel);
-
-        frame.setSize(new Dimension(420, 420));
-        frame.setResizable(false);
-        frame.setVisible(true);
+    private void setFrame() {
+        this.frame.setTitle("Quoridor");
+        this.frame.setSize(1300, 1000);
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.frame.setResizable(false);
+        this.frame.setFocusable(true);
+        this.frame.setVisible(true);
+        this.frame.add(this.mainPanel);
     }
 
     public void setBoardButtonsEnabled(boolean state) {
@@ -288,28 +136,20 @@ public class GameGraphics {
         }
     }
 
-    public void setBoardButtonsListener(GameHandler context) {
+    public void setBoardButtonsListener() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                this.buttons[i][j].addActionListener(context);
+                this.buttons[i][j].addActionListener(this.context);
             }
         }
     }
 
-    public static void setButtonListener(JButton button, GameHandler context) {
-        button.addActionListener(context);
-    }
-
-    public static void setButtonEnabled(JButton button, boolean state) {
+    public void setButtonEnabled(JButton button, boolean state) {
         button.setEnabled(state);
     }
 
-    public void setPreGameSidePanelVisibility(boolean state) {
-        this.preGameSidePanel.setVisible(state);
-    }
-
-    public void setSidePanelVisibility(boolean state) {
-        this.sidePanel.setVisible(state);
+    public void removePanel(JPanel panel) {
+        this.mainPanel.remove(panel);
     }
 
     public Tuple<Integer, Integer> getBoardButtonCoordinates(JButton button) {
@@ -325,67 +165,69 @@ public class GameGraphics {
     }
 
     public void setValidMove(int x, int y, int currentTurn) {
-        Color validColor = (currentTurn == BoardFill.PLAYER1.value() ? VALID_MOVE_PLAYER1_COLOR : VALID_MOVE_PLAYER2_COLOR);
-        this.buttons[y][x].setBackground(validColor);
+        Color validMoveColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER1_COLOR) : this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER2_COLOR));
+        this.buttons[y][x].setBackground(validMoveColor);
     }
 
     public void removeValidMove(int x, int y) {
-        this.buttons[y][x].setBackground(EMPTY_COLOR);
+        this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
     public void paintPlayer(int x, int y, int currentTurn) {
-        Color playerColor = (currentTurn == BoardFill.PLAYER1.value() ? PLAYER1_COLOR : PLAYER2_COLOR);
+        Color playerColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.PLAYER1_COLOR) : this.colorMap.get(ColorEnum.PLAYER2_COLOR));
         this.buttons[y][x].setBackground(playerColor);
     }
 
     public void removePlayer(int x, int y) {
-        this.buttons[y][x].setBackground(EMPTY_COLOR);
+        this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
     public void paintWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
-            this.buttons[y][x].setBackground(PLACED_WALL_COLOR);
-            this.buttons[y][x + 1].setBackground(PLACED_WALL_COLOR);
-            this.buttons[y][x - 1].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
+            this.buttons[y][x + 1].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
+            this.buttons[y][x - 1].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
         } else {
-            this.buttons[y][x].setBackground(PLACED_WALL_COLOR);
-            this.buttons[y + 1][x].setBackground(PLACED_WALL_COLOR);
-            this.buttons[y - 1][x].setBackground(PLACED_WALL_COLOR);
+            this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
+            this.buttons[y + 1][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
+            this.buttons[y - 1][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
         }
     }
 
     public void deleteWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
-            this.buttons[y][x].setBackground(WALL_COLOR);
-            this.buttons[y][x + 1].setBackground(WALL_COLOR);
-            this.buttons[y][x - 1].setBackground(WALL_COLOR);
+            this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
+            this.buttons[y][x + 1].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
+            this.buttons[y][x - 1].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
         } else {
-            this.buttons[y][x].setBackground(WALL_COLOR);
-            this.buttons[y + 1][x].setBackground(WALL_COLOR);
-            this.buttons[y - 1][x].setBackground(WALL_COLOR);
+            this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
+            this.buttons[y + 1][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
+            this.buttons[y - 1][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
         }
     }
 
     public void rotate(Orientation orientation) {
-        if (orientation == Orientation.HORIZONTAL)
-            this.rotateButton.setText("Vertical");
-        else
-            this.rotateButton.setText("Horizontal");
+        this.sidePanel.updateRotateButton(orientation);
     }
 
     public void updateComment(String comment) {
-        this.comment.setText(comment);
+        this.sidePanel.updateComment(comment);
     }
 
     public void updateGameStatus(String gameStatus) {
-        this.gameStatus.setText(gameStatus);
+        this.sidePanel.updateGameStatus(gameStatus);
     }
 
     public void updatePlayerWallsLeft(int playerID, int wallsLeft) {
-        this.playersWallsLeft[playerID].setText(String.format("Player %d: %d Walls", playerID, wallsLeft));
+        this.sidePanel.updatePlayerWallsLeft(playerID, wallsLeft);
+    }
+
+    public void addMoveToList(String move) {
+        this.postGamePanel.addMoveToList(move);
     }
 
     public void reset() {
+        // FIXME
         setBoardButtonsColor();
         updateComment("");
     }
