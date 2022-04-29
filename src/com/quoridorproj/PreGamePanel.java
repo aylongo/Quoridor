@@ -14,13 +14,9 @@ public class PreGamePanel {
         this.colorMap = new ColorMap();
     }
 
-    public JPanel getPreGamePanel() {
-        return this.preGamePanel;
-    }
+    public JPanel getPreGamePanel() { return this.preGamePanel; }
 
-    public JButton getPlayAIButton() {
-        return this.playAIButton;
-    }
+    public JButton getPlayAIButton() { return this.playAIButton; }
 
     public JButton getPlayTwoPlayersButton() {
         return this.playTwoPlayersButton;

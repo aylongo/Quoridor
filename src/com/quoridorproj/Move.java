@@ -7,12 +7,6 @@ public class Move {
     private boolean isWall;
     private Orientation orientation;
 
-    public Move() {
-        this.coordinates = null;
-        this.isWall = false;
-        this.orientation = null;
-    }
-
     public Move(int x, int y, Orientation orientation) {
         setCoordinates(x, y);
         this.isWall = true;
@@ -29,10 +23,6 @@ public class Move {
         return new Move(square.getX(), square.getY());
     }
 
-    public void rotate() {
-        this.orientation = (orientation == Orientation.HORIZONTAL) ? Orientation.VERTICAL : Orientation.HORIZONTAL;
-    }
-
     public int getX() {
         return this.coordinates.x;
     }
@@ -45,20 +35,12 @@ public class Move {
         this.coordinates = new Tuple<>(x, y);
     }
 
-    public void setOrientation(Orientation orientation) {
-        this.orientation = orientation;
-    }
-
     public boolean isWall() {
         return this.isWall;
     }
 
     public Orientation getOrientation() {
         return this.orientation;
-    }
-
-    public void setWall(boolean isWall) {
-        this.isWall = isWall;
     }
 
     @Override

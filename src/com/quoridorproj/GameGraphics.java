@@ -32,18 +32,18 @@ public class GameGraphics {
         setFrame();
     }
 
-    public JPanel getPreGamePanel() { return this.preGamePanel.getPreGamePanel(); }
+    private JPanel getPreGamePanel() { return this.preGamePanel.getPreGamePanel(); }
 
-    public void setPreGamePanel(boolean playAIButtonState, boolean playTwoPlayersButtonState) {
+    private void setPreGamePanel(boolean playAIButtonState, boolean playTwoPlayersButtonState) {
         this.preGamePanel.setPreGamePanel(this.context, this.mainPanel);
         setButtonEnabled(getPlayAIButton(), playAIButtonState);
         setButtonEnabled(getPlayTwoPlayersButton(), playTwoPlayersButtonState);
         setBoardButtonsEnabled(false);
     }
 
-    public JPanel getSidePanel() { return this.sidePanel.getSidePanel(); }
+    private JPanel getSidePanel() { return this.sidePanel.getSidePanel(); }
 
-    public void setSidePanel(boolean continueButtonState, boolean rotateButtonState, boolean undoButtonState) {
+    private void setSidePanel(boolean continueButtonState, boolean rotateButtonState, boolean undoButtonState) {
         this.sidePanel.setSidePanel(this.context, this.mainPanel);
         setButtonEnabled(getContinueButton(), continueButtonState);
         setButtonEnabled(getRotateButton(), rotateButtonState);
@@ -51,9 +51,7 @@ public class GameGraphics {
         setBoardButtonsEnabled(true);
     }
 
-    public JPanel getPostGamePanel() { return this.postGamePanel.getPostGamePanel();}
-
-    public void setPostGamePanel(int winnerID, int numTurns) {
+    private void setPostGamePanel(int winnerID, int numTurns) {
         this.postGamePanel.setPostGamePanel(this.mainPanel, winnerID, numTurns);
         setBoardButtonsEnabled(false);
     }
@@ -128,7 +126,26 @@ public class GameGraphics {
         this.frame.add(this.mainPanel);
     }
 
-    public void setBoardButtonsEnabled(boolean state) {
+    public void setStartGameGraphics(int playerID, int playerOneWallsLeft, int playerTwoWallsLeft) {
+        removePanel(this.getPreGamePanel());
+        setSidePanel(false, true, false);
+        updatePlayerWallsLeft(BoardFill.PLAYER1.value(), playerOneWallsLeft);
+        updatePlayerWallsLeft(BoardFill.PLAYER2.value(), playerTwoWallsLeft);
+        updateGameStatus(String.format("Player %d's Turn!", playerID));
+        setBoardButtonsListener();
+    }
+
+    public void setPostGameGraphics(int winnerID, int numTurns) {
+        removePanel(this.getSidePanel());
+        setPostGamePanel(winnerID, numTurns);
+    }
+
+    public void setAITurnGraphics() {
+        setBoardButtonsEnabled(false);
+        setButtonEnabled(this.getRotateButton(), false);
+    }
+
+    private void setBoardButtonsEnabled(boolean state) {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 this.buttons[i][j].setEnabled(state);
@@ -136,7 +153,7 @@ public class GameGraphics {
         }
     }
 
-    public void setBoardButtonsListener() {
+    private void setBoardButtonsListener() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 this.buttons[i][j].addActionListener(this.context);
@@ -144,13 +161,11 @@ public class GameGraphics {
         }
     }
 
-    public void setButtonEnabled(JButton button, boolean state) {
+    private void setButtonEnabled(JButton button, boolean state) {
         button.setEnabled(state);
     }
 
-    public void removePanel(JPanel panel) {
-        this.mainPanel.remove(panel);
-    }
+    private void removePanel(JPanel panel) { this.mainPanel.remove(panel); }
 
     public Tuple<Integer, Integer> getBoardButtonCoordinates(JButton button) {
         // The function returns the coordinates of the clicked button (The tens' digit is the row and the units' digit is the column)
@@ -164,6 +179,60 @@ public class GameGraphics {
         return null;
     }
 
+    public void doMove(int playerID, int lastButtonX, int lastButtonY, int buttonX, int buttonY, String move) {
+        setBoardButtonsEnabled(false);
+        setButtonEnabled(this.getContinueButton(), true);
+        setButtonEnabled(this.getUndoButton(), true);
+        setButtonEnabled(this.getRotateButton(), false);
+        removePlayer(lastButtonX, lastButtonY);
+        paintPlayer(buttonX, buttonY, playerID);
+        updateComment(String.format("Turn Made: %s", move));
+    }
+
+    public void doMoveLastSquare(int playerID, int currentButtonX, int currentButtonY, int lastButtonX, int lastButtonY, String canceledMove) {
+        setBoardButtonsEnabled(true);
+        setButtonEnabled(this.getContinueButton(), false);
+        setButtonEnabled(this.getUndoButton(), false);
+        setButtonEnabled(this.getRotateButton(), true);
+        removePlayer(currentButtonX, currentButtonY);
+        paintPlayer(lastButtonX, lastButtonY, playerID);
+        this.getRotateButton().setText("Horizontal");
+        updateComment(String.format("Turn Canceled: %s", canceledMove));
+    }
+
+    public void doPlaceWall(int playerID, int buttonX, int buttonY, Orientation wallOrientation, int wallsLeft, String move) {
+        setBoardButtonsEnabled(false);
+        setButtonEnabled(this.getContinueButton(), true);
+        setButtonEnabled(this.getUndoButton(), true);
+        setButtonEnabled(this.getRotateButton(), false);
+        paintWall(buttonX, buttonY, wallOrientation);
+        updatePlayerWallsLeft(playerID, wallsLeft);
+        updateComment(String.format("Turn Made: %s", move));
+    }
+
+    public void doRemoveWall(int playerID, int buttonX, int buttonY, Orientation wallOrientation, int wallsLeft, String canceledMove) {
+        setBoardButtonsEnabled(true);
+        setButtonEnabled(this.getContinueButton(), false);
+        setButtonEnabled(this.getUndoButton(), false);
+        setButtonEnabled(this.getRotateButton(), true);
+        deleteWall(buttonX, buttonY, wallOrientation);
+        updatePlayerWallsLeft(playerID, wallsLeft);
+        this.getRotateButton().setText("Horizontal");
+        updateComment(String.format("Turn Canceled: %s", canceledMove));
+    }
+
+    public void updateInvalidTurnComment(boolean isWallTurn) {
+        updateComment(isWallTurn ? "Invalid wall!" : "Invalid move!");
+    }
+
+    public void updateCurrentTurn(int playerID) {
+        setBoardButtonsEnabled(true);
+        setButtonEnabled(this.getContinueButton(), false);
+        setButtonEnabled(this.getUndoButton(), false);
+        setButtonEnabled(this.getRotateButton(), true);
+        updateGameStatus(String.format("Player %d's Turn!", playerID));
+    }
+
     public void setValidMove(int x, int y, int currentTurn) {
         Color validMoveColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER1_COLOR) : this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER2_COLOR));
         this.buttons[y][x].setBackground(validMoveColor);
@@ -173,16 +242,16 @@ public class GameGraphics {
         this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
-    public void paintPlayer(int x, int y, int currentTurn) {
+    private void paintPlayer(int x, int y, int currentTurn) {
         Color playerColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.PLAYER1_COLOR) : this.colorMap.get(ColorEnum.PLAYER2_COLOR));
         this.buttons[y][x].setBackground(playerColor);
     }
 
-    public void removePlayer(int x, int y) {
+    private void removePlayer(int x, int y) {
         this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
-    public void paintWall(int x, int y, Orientation orientation) {
+    private void paintWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
             this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
             this.buttons[y][x + 1].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
@@ -194,7 +263,7 @@ public class GameGraphics {
         }
     }
 
-    public void deleteWall(int x, int y, Orientation orientation) {
+    private void deleteWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
             this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
             this.buttons[y][x + 1].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
@@ -206,29 +275,41 @@ public class GameGraphics {
         }
     }
 
-    public void rotate(Orientation orientation) {
-        this.sidePanel.updateRotateButton(orientation);
-    }
+    public void rotate() { this.sidePanel.updateRotateButton(getOrientation()); }
 
-    public void updateComment(String comment) {
-        this.sidePanel.updateComment(comment);
-    }
+    public Orientation getOrientation() { return this.getRotateButton().getText().equals("Horizontal") ? Orientation.HORIZONTAL : Orientation.VERTICAL; }
 
-    public void updateGameStatus(String gameStatus) {
-        this.sidePanel.updateGameStatus(gameStatus);
-    }
+    public void resetRotateButton() { this.sidePanel.resetRotateButton(); }
 
-    public void updatePlayerWallsLeft(int playerID, int wallsLeft) {
-        this.sidePanel.updatePlayerWallsLeft(playerID, wallsLeft);
-    }
+    private void updateComment(String comment) { this.sidePanel.updateComment(comment); }
 
-    public void addMoveToList(String move) {
-        this.postGamePanel.addMoveToList(move);
+    public void resetComment() { this.sidePanel.updateComment(""); }
+
+    private void updateGameStatus(String gameStatus) { this.sidePanel.updateGameStatus(gameStatus); }
+
+    private void updatePlayerWallsLeft(int playerID, int wallsLeft) { this.sidePanel.updatePlayerWallsLeft(playerID, wallsLeft); }
+
+    public void addMoveToList(int playerID, String move) { this.postGamePanel.addMoveToList(toFormattedString(playerID, move)); }
+
+    /**
+     * The function creates a new string from the move according to GUI's formatting
+     *
+     * @param playerID The ID of the player who made the move
+     * @param move The move's string
+     * @return A GUI formatted string from the move
+     */
+    private String toFormattedString(int playerID, String move) {
+        String formattedMove;
+        if (playerID == BoardFill.PLAYER1.value())
+            formattedMove = String.format("%s", move);
+        else
+            formattedMove = String.format("<html><b>%s</b></html>", move);
+        return formattedMove;
     }
 
     public void reset() {
         // FIXME
         setBoardButtonsColor();
-        updateComment("");
+        resetComment();
     }
 }

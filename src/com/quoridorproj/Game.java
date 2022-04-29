@@ -42,13 +42,9 @@ public class Game {
         return new Game(this);
     }
 
-    public Board getBoard() { return this.board; }
-
     public Player[] getPlayers() { return this.players; }
 
     public Player getPlayer(int id) { return this.players[id]; }
-
-    public ArrayList<Move> getMovesList() { return this.movesList; }
 
     public int getCurrentTurn() { return this.currentTurn; }
 
@@ -273,8 +269,8 @@ public class Game {
      * @param move The Move object
      */
     public void doMove(Move move) {
-        int newX = move.getX(), newY = move.getY();
         Player player = getPlayer(this.currentTurn);
+        int newX = move.getX(), newY = move.getY();
         int lastX = player.getCurrentSquare().getX(), lastY = player.getCurrentSquare().getY();
         this.board.getSquares()[newY][newX].setValue(this.currentTurn);
         this.board.getSquares()[lastY][lastX].setValue(BoardFill.EMPTY.value());

@@ -68,11 +68,12 @@ public class PostGamePanel {
         this.movesList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         this.movesList.setVisibleRowCount(-1);
         this.movesList.setFont(new Font("Arial", Font.PLAIN, 12));
-        this.movesList.setFixedCellWidth(25); this.movesList.setFixedCellHeight(20);
+        this.movesList.setFixedCellWidth(24); this.movesList.setFixedCellHeight(20);
 
         this.movesListScroller = new JScrollPane(this.movesList);
         this.movesListScroller.setPreferredSize(new Dimension(220, 150));
         this.movesListScroller.setMaximumSize(new Dimension(220, 150));
+        this.movesListScroller.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
         this.movesListScroller.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
@@ -83,7 +84,5 @@ public class PostGamePanel {
         this.numTurns.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
     }
 
-    public void addMoveToList(String move) {
-        this.movesListModel.addElement(move);
-    }
+    public void addMoveToList(String move) { this.movesListModel.addElement(move); }
 }

@@ -7,7 +7,7 @@ public class Player {
     private int wallsLeft;
     private Square lastSquare; // Last square player stood on
     private Square currentSquare; // Current square player stands on
-    private Move lastMove; // The last turn the player has done
+    private Move lastMove; // The last turn the player made
 
     public Player(int id) {
         this.id = id;

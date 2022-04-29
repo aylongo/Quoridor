@@ -47,32 +47,25 @@ public class GameHandler implements ActionListener {
     }
 
     private void handleRotate() {
-        this.graphics.rotate(getOrientation());
+        this.graphics.rotate();
     }
 
     /**
-     * The function cancels the current (User) player's turn and updates the GUI
+     * The function cancels the current (User) player's turn and updates the GUI accordingly
      */
     private void handleUndo() {
         Player player = this.game.getPlayer(this.game.getCurrentTurn());
-        Move lastMove = player.getLastMove();
+        Move canceledMove = player.getLastMove();
 
-        if (lastMove.isWall()) {
-            int lastMoveButtonX = lastMove.getX() * 2, lastMoveButtonY = lastMove.getY() * 2;
-            doRemoveWall(lastMove, lastMoveButtonX + 1, lastMoveButtonY + 1);
+        if (canceledMove.isWall()) {
+            int lastMoveButtonX = canceledMove.getX() * 2, lastMoveButtonY = canceledMove.getY() * 2;
+            doRemoveWall(canceledMove, lastMoveButtonX + 1, lastMoveButtonY + 1);
         } else {
-            Square lastSquare = this.game.getPlayer(this.game.getCurrentTurn()).getLastSquare();
-            int lastSquareButtonX = lastSquare.getX() * 2, lastSquareButtonY = lastSquare.getY() * 2;
-            Move lastSquareMove = new Move(lastSquareButtonX / 2, lastSquareButtonY / 2);
-            doMoveLastSquare(lastSquareMove, lastSquareButtonX, lastSquareButtonY);
+            Square lastSquare = player.getLastSquare();
+            int lastMoveButtonX = lastSquare.getX() * 2, lastMoveButtonY = lastSquare.getY() * 2;
+            Move lastSquareMove = new Move(lastMoveButtonX / 2, lastMoveButtonY / 2);
+            doMoveLastSquare(lastSquareMove, lastMoveButtonX, lastMoveButtonY);
         }
-
-        this.graphics.updateComment(String.format("Turn Canceled: %s", lastMove));
-        this.graphics.getRotateButton().setText("Horizontal");
-        this.graphics.setButtonEnabled(this.graphics.getContinueButton(), false);
-        this.graphics.setButtonEnabled(this.graphics.getUndoButton(), false);
-        this.graphics.setButtonEnabled(this.graphics.getRotateButton(), true);
-        this.graphics.setBoardButtonsEnabled(true);
         paintValidMoves();
     }
 
@@ -83,14 +76,13 @@ public class GameHandler implements ActionListener {
         Player player = this.game.getPlayer(this.game.getCurrentTurn());
         this.game.incTurns();
         this.game.addMoveToList(player.getLastMove());
-        this.graphics.addMoveToList(player.getLastMove().toString());
-        this.graphics.updateComment("");
-        this.graphics.getRotateButton().setText("Horizontal");
+        this.graphics.addMoveToList(player.getID(), player.getLastMove().toString());
+        this.graphics.resetComment();
+        this.graphics.resetRotateButton();
         handleGameOver();
 
-        if (this.mode == MODE_AI && this.game.getCurrentTurn() == ai.getMaxPlayer()) {
+        if (isAITurn())
             handleAITurn();
-        }
     }
 
     /**
@@ -115,7 +107,7 @@ public class GameHandler implements ActionListener {
             doMove(move, buttonX, buttonY);
         } else if (buttonY % 2 == 1 && buttonX % 2 == 1) { // A wall placing turn
             int buttonMoveX = buttonX - 1, buttonMoveY = buttonY - 1; // These are the coordinates of the closest move button to (0, 0)
-            Orientation orientation = getOrientation();
+            Orientation orientation = this.graphics.getOrientation();
             Move move = new Move(buttonMoveX / 2, buttonMoveY / 2, orientation);
             doPlaceWall(move, buttonX, buttonY);
         }
@@ -126,18 +118,10 @@ public class GameHandler implements ActionListener {
      */
     private void handleGameOver() {
         if (this.game.isGameOver()) {
-            this.graphics.updateGameStatus(String.format("PLAYER %d WON!", this.game.getCurrentTurn()));
-            this.graphics.setButtonEnabled(this.graphics.getContinueButton(), false);
-            this.graphics.setButtonEnabled(this.graphics.getUndoButton(), false);
-            this.graphics.setButtonEnabled(this.graphics.getRotateButton(), false);
-            setPostGameGraphics();
+            this.graphics.setPostGameGraphics(this.game.getCurrentTurn(), this.game.getTurnsCounter());
         } else {
             this.game.updateCurrentTurn();
-            this.graphics.setBoardButtonsEnabled(true);
-            this.graphics.updateGameStatus(String.format("Player %d's Turn!", this.game.getCurrentTurn()));
-            this.graphics.setButtonEnabled(this.graphics.getContinueButton(), false);
-            this.graphics.setButtonEnabled(this.graphics.getUndoButton(), false);
-            this.graphics.setButtonEnabled(this.graphics.getRotateButton(), true);
+            this.graphics.updateCurrentTurn(this.game.getCurrentTurn());
             paintValidMoves();
         }
     }
@@ -147,8 +131,7 @@ public class GameHandler implements ActionListener {
      */
     private void handleAITurn() {
         Player playerAI = this.game.getPlayer(this.game.getCurrentTurn());
-        this.graphics.setBoardButtonsEnabled(false);
-        this.graphics.setButtonEnabled(this.graphics.getRotateButton(), false);
+        this.graphics.setAITurnGraphics();
 
         Move moveAI = ai.getBestMove(this.game, AI_DEPTH);
         int moveButtonX = moveAI.getX() * 2, moveButtonY = moveAI.getY() * 2;
@@ -160,7 +143,8 @@ public class GameHandler implements ActionListener {
 
         this.game.incTurns();
         this.game.addMoveToList(playerAI.getLastMove());
-        this.graphics.addMoveToList(playerAI.getLastMove().toString());
+        this.graphics.addMoveToList(playerAI.getID(), moveAI.toString());
+
         handleGameOver();
     }
 
@@ -173,38 +157,31 @@ public class GameHandler implements ActionListener {
      */
     private void doMove(Move move, int buttonX, int buttonY) {
         if (this.game.isValidMove(move)) {
-            this.graphics.setBoardButtonsEnabled(false);
             removeValidMoves();
-
             Player player = this.game.getPlayer(this.game.getCurrentTurn());
             int lastSquareX = player.getCurrentSquare().getX(), lastSquareY = player.getCurrentSquare().getY();
-            int lastSquareButtonX = lastSquareX * 2, lastSquareButtonY = lastSquareY * 2;
+            int lastButtonX = lastSquareX * 2, lastButtonY = lastSquareY * 2;
             this.game.doMove(move);
-            this.graphics.removePlayer(lastSquareButtonX, lastSquareButtonY);
-            this.graphics.paintPlayer(buttonX, buttonY, this.game.getCurrentTurn());
-            this.graphics.updateComment(String.format("Turn Made: %s", move));
-            this.graphics.setButtonEnabled(this.graphics.getContinueButton(), true);
-            this.graphics.setButtonEnabled(this.graphics.getUndoButton(), true);
-            this.graphics.setButtonEnabled(this.graphics.getRotateButton(), false);
+            this.graphics.doMove(player.getID(), lastButtonX, lastButtonY, buttonX, buttonY, move.toString());
         } else {
-            this.graphics.updateComment("Invalid move!");
+            this.graphics.updateInvalidTurnComment(false);
         }
     }
 
     /**
      * The function makes a move to the last position of the player
      *
-     * @param move The last Move object that the player returns to
-     * @param buttonX The X value of the player's last position button on the GUI's board
-     * @param buttonY The Y value of the player's last position button on the GUI's board
+     * @param lastSquareMove The last square Move object that the player returns to
+     * @param lastMoveButtonX The X value of the player's last position button on the GUI's board
+     * @param lastMoveButtonY The Y value of the player's last position button on the GUI's board
      */
-    private void doMoveLastSquare(Move move, int buttonX, int buttonY) {
+    private void doMoveLastSquare(Move lastSquareMove, int lastMoveButtonX, int lastMoveButtonY) {
         Player player = this.game.getPlayer(this.game.getCurrentTurn());
-        int lastSquareX = player.getCurrentSquare().getX(), lastSquareY = player.getCurrentSquare().getY();
-        int lastSquareButtonX = lastSquareX * 2, lastSquareButtonY = lastSquareY * 2;
-        this.game.doMove(move);
-        this.graphics.removePlayer(lastSquareButtonX, lastSquareButtonY);
-        this.graphics.paintPlayer(buttonX, buttonY, this.game.getCurrentTurn());
+        Move canceledMove = player.getLastMove();
+        int currentSquareX = player.getCurrentSquare().getX(), currentSquareY = player.getCurrentSquare().getY();
+        int currentButtonX = currentSquareX * 2, currentButtonY = currentSquareY * 2;
+        this.game.doMove(lastSquareMove);
+        this.graphics.doMoveLastSquare(player.getID(), currentButtonX, currentButtonY, lastMoveButtonX, lastMoveButtonY, canceledMove.toString());
     }
 
     /**
@@ -216,31 +193,25 @@ public class GameHandler implements ActionListener {
      */
     private void doPlaceWall(Move move, int buttonX, int buttonY) {
         if (this.game.isValidWall(move)) {
-            this.graphics.setBoardButtonsEnabled(false);
             removeValidMoves();
-
+            Player player = this.game.getPlayer(this.game.getCurrentTurn());
             this.game.doPlaceWall(move);
-            this.graphics.paintWall(buttonX, buttonY, move.getOrientation());
-            this.graphics.updateComment(String.format("Turn Made: %s", move));
-            this.graphics.updatePlayerWallsLeft(this.game.getCurrentTurn(), this.game.getPlayers()[game.getCurrentTurn()].getWallsLeft());
-            this.graphics.setButtonEnabled(this.graphics.getContinueButton(), true);
-            this.graphics.setButtonEnabled(this.graphics.getUndoButton(), true);
-            this.graphics.setButtonEnabled(this.graphics.getRotateButton(), false);
+            this.graphics.doPlaceWall(player.getID(), buttonX, buttonY, move.getOrientation(), player.getWallsLeft(), move.toString());
         } else {
-            this.graphics.updateComment("Invalid wall!");
+            this.graphics.updateInvalidTurnComment(true);
         }
     }
 
     /**
      * The function removes the wall from the game board (the logical board and the GUI's)
-     * @param move The wall Move object that's being removed
+     * @param canceledMove The wall Move object that's being removed
      * @param buttonX The X value of the wall's button on the GUI's board
      * @param buttonY The Y value of the wall's button on the GUI's board
      */
-    private void doRemoveWall(Move move, int buttonX, int buttonY) {
-        this.game.doRemoveWall(move);
-        this.graphics.deleteWall(buttonX, buttonY, move.getOrientation());
-        this.graphics.updatePlayerWallsLeft(this.game.getCurrentTurn(), this.game.getPlayers()[game.getCurrentTurn()].getWallsLeft());
+    private void doRemoveWall(Move canceledMove, int buttonX, int buttonY) {
+        Player player = this.game.getPlayer(this.game.getCurrentTurn());
+        this.game.doRemoveWall(canceledMove);
+        this.graphics.doRemoveWall(player.getID(), buttonX, buttonY, canceledMove.getOrientation(), player.getWallsLeft(), canceledMove.toString());
     }
 
     /**
@@ -267,29 +238,8 @@ public class GameHandler implements ActionListener {
         }
     }
 
-    private Orientation getOrientation() {
-        return this.graphics.getRotateButton().getText().equals("Horizontal") ? Orientation.HORIZONTAL : Orientation.VERTICAL;
-    }
-
-    /**
-     * The function sets the game starting graphics
-     */
-    private void setStartGameGraphics() {
-        this.graphics.removePanel(this.graphics.getPreGamePanel());
-        this.graphics.setSidePanel(false, true, false);
-        this.graphics.updatePlayerWallsLeft(BoardFill.PLAYER1.value(), this.game.getPlayers()[BoardFill.PLAYER1.value()].getWallsLeft());
-        this.graphics.updatePlayerWallsLeft(BoardFill.PLAYER2.value(), this.game.getPlayers()[BoardFill.PLAYER2.value()].getWallsLeft());
-        this.graphics.updateGameStatus(String.format("Player %d's Turn!", this.game.getCurrentTurn()));
-        this.graphics.setBoardButtonsListener();
-        paintValidMoves();
-    }
-
-    /**
-     * The function sets the post game graphics
-     */
-    private void setPostGameGraphics() {
-        this.graphics.removePanel(this.graphics.getSidePanel());
-        this.graphics.setPostGamePanel(this.game.getCurrentTurn(), this.game.getTurnsCounter());
+    private boolean isAITurn() {
+        return (this.mode == MODE_AI && this.game.getCurrentTurn() == ai.getMaxPlayer());
     }
 
     /**
@@ -300,10 +250,12 @@ public class GameHandler implements ActionListener {
         // this.game.reset();
         // this.graphics.reset();
         this.mode = mode;
-        setStartGameGraphics();
+        int playerOneWallsLeft = this.game.getPlayers()[BoardFill.PLAYER1.value()].getWallsLeft();
+        int playerTwoWallsLeft = this.game.getPlayers()[BoardFill.PLAYER2.value()].getWallsLeft();
+        this.graphics.setStartGameGraphics(this.game.getCurrentTurn(), playerOneWallsLeft, playerTwoWallsLeft);
+        paintValidMoves();
 
-        if (this.mode == MODE_AI && this.game.getCurrentTurn() == ai.getMaxPlayer()) {
+        if (isAITurn())
             handleAITurn();
-        }
     }
 }

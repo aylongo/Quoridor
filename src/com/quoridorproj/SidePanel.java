@@ -17,13 +17,9 @@ public class SidePanel {
         this.colorMap = new ColorMap();
     }
 
-    public JPanel getSidePanel() {
-        return this.sidePanel;
-    }
+    public JPanel getSidePanel() { return this.sidePanel; }
 
-    public JButton getContinueButton() {
-        return this.continueButton;
-    }
+    public JButton getContinueButton() { return this.continueButton; }
 
     public JButton getRotateButton() {
         return this.rotateButton;
@@ -139,7 +135,7 @@ public class SidePanel {
         this.gameStatus.setText(gameStatus);
     }
 
-    public void updatePlayerWallsLeft(int playerID, int wallsLeft) {
-        this.playersWallsLeft[playerID].setText(String.format("Player %d: %d Walls", playerID, wallsLeft));
-    }
+    public void updatePlayerWallsLeft(int playerID, int wallsLeft) { this.playersWallsLeft[playerID].setText(String.format("Player %d: %d Walls", playerID, wallsLeft)); }
+
+    public void resetRotateButton() { this.rotateButton.setText("Horizontal"); }
 }
