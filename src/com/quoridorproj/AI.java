@@ -119,7 +119,7 @@ public class AI {
     }
 
     /**
-     * The function evaluates the given game state according to the AI player's and User player's progress to their goal
+     * The function evaluates the given game state according to the maximizing player's and the minimizing player's progress to their goal
      * @param game State of game
      * @param depth Number of turns ahead to finish the search
      * @return The score of this specific game state
@@ -130,10 +130,10 @@ public class AI {
 
         int playerNumWalls = game.getPlayer(this.maxPlayer).getWallsLeft();
 
-        if (game.isGameOver() && playerNumWalls > 0) {
+        if (game.isGameOver()) {
             if (playerRow == game.getWinRow(this.maxPlayer))
                 return MAX_SCORE + depth;
-            else if (opponentRow == game.getWinRow(this.minPlayer))
+            else if (opponentRow == game.getWinRow(this.minPlayer)  && playerNumWalls > 0)
                 return MIN_SCORE - depth;
         }
 
@@ -144,7 +144,7 @@ public class AI {
         int opponentShortestPathToGoal = tupleOpponentShortestPath != null ? tupleOpponentShortestPath.x : Integer.MIN_VALUE;
 
         if (playerNumWalls > 0)
-            return (opponentShortestPathToGoal - playerShortestPathToGoal) + Math.random();
+            return (opponentShortestPathToGoal - playerShortestPathToGoal) + (playerNumWalls * 0.5) + Math.random();
         else
             return Math.pow(playerShortestPathToGoal, -1);
     }

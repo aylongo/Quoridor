@@ -20,9 +20,9 @@ public class Game {
     }
 
     /**
-     * Game Class Constructor specifying the game object to get the data from
+     * Game Class Constructor specifying the Game object to get the data from
      *
-     * @param game Game object to make duplicate from
+     * @param game The Game object to make a duplicate from
      */
     private Game(Game game) {
         this.board = game.board.duplicate();
@@ -34,7 +34,7 @@ public class Game {
     }
 
     /**
-     * The function returns a game clone of the function calling object
+     * The function returns a Game clone of the function calling Game object
      *
      * @return Game object clone
      */
@@ -114,7 +114,7 @@ public class Game {
      * The function searches for the possible turns of the player
      *
      * @param playerID The ID of the player that the function will work on
-     * @return A list of the whole player's possible turns (moves and walls place)
+     * @return A list of the whole player's possible turns (moves and walls placing)
      */
     public ArrayList<Move> getPossibleTurns(int playerID) {
         ArrayList<Move> moves = new ArrayList<>();
@@ -251,10 +251,10 @@ public class Game {
     }
 
     /**
-     * The function checks if the player is blocked (from reaching to the goal) after placing the wall represented in the given move object
+     * The function checks if the player is blocked (from reaching his goal) after placing the wall represented in the given move object
      *
      * @param playerID The ID of the player that the function will work on
-     * @param move The wall move object
+     * @param move The wall Move object
      * @return True if the player is blocked and False if otherwise
      */
     private boolean isTrapped(int playerID, Move move) {

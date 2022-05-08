@@ -10,6 +10,9 @@ public class PreGamePanel {
     private JButton playAIButton;
     private JButton playTwoPlayersButton;
 
+    /**
+     * PreGamePanel Class Constructor
+     */
     public PreGamePanel() {
         this.colorMap = new ColorMap();
     }
@@ -22,6 +25,12 @@ public class PreGamePanel {
         return this.playTwoPlayersButton;
     }
 
+    /**
+     * The function initializes the GUI's pre game panel
+     *
+     * @param context The class which the function was called from
+     * @param mainPanel The GUI's main panel
+     */
     public void setPreGamePanel(GameHandler context, JPanel mainPanel) {
         // Sets an outer panel to hold the pre-game side panel
         this.preGamePanel = new JPanel();
@@ -54,6 +63,9 @@ public class PreGamePanel {
         mainPanel.add(this.preGamePanel, BorderLayout.EAST);
     }
 
+    /**
+     * The function initializes the play against an AI button
+     */
     private void setPlayAIButton() {
         this.playAIButton = new JButton("Play Against AI");
         this.playAIButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -61,6 +73,9 @@ public class PreGamePanel {
         this.playAIButton.setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function initializes the two players game button
+     */
     private void setPlayTwoPlayersButton() {
         this.playTwoPlayersButton = new JButton("Play 2 Players");
         this.playTwoPlayersButton.setAlignmentX(Component.CENTER_ALIGNMENT);

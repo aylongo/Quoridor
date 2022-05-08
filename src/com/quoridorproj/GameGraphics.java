@@ -15,6 +15,11 @@ public class GameGraphics {
     private SidePanel sidePanel;
     private PostGamePanel postGamePanel;
 
+    /**
+     * GameGraphics Class Constructor
+     *
+     * @param context The class which the function was called from
+     */
     public GameGraphics(GameHandler context) {
         this.colorMap = new ColorMap();
         this.context = context;
@@ -34,6 +39,12 @@ public class GameGraphics {
 
     private JPanel getPreGamePanel() { return this.preGamePanel.getPreGamePanel(); }
 
+    /**
+     * The function initializes the pre game panel and sets the graphics according to the situation
+     *
+     * @param playAIButtonState The state of the play against an AI button (True for enabled and False for disabled)
+     * @param playTwoPlayersButtonState The state of the two players game button (True for enabled and False for disabled)
+     */
     private void setPreGamePanel(boolean playAIButtonState, boolean playTwoPlayersButtonState) {
         this.preGamePanel.setPreGamePanel(this.context, this.mainPanel);
         setButtonEnabled(getPlayAIButton(), playAIButtonState);
@@ -43,6 +54,13 @@ public class GameGraphics {
 
     private JPanel getSidePanel() { return this.sidePanel.getSidePanel(); }
 
+    /**
+     * The function initializes the side panel and sets the graphics according to the situation
+     *
+     * @param continueButtonState The state of the continue button (True for enabled and False for disabled)
+     * @param rotateButtonState The state of the rotate button (True for enabled and False for disabled)
+     * @param undoButtonState The state of the undo button (True for enabled and False for disabled)
+     */
     private void setSidePanel(boolean continueButtonState, boolean rotateButtonState, boolean undoButtonState) {
         this.sidePanel.setSidePanel(this.context, this.mainPanel);
         setButtonEnabled(getContinueButton(), continueButtonState);
@@ -51,6 +69,12 @@ public class GameGraphics {
         setBoardButtonsEnabled(true);
     }
 
+    /**
+     * The function initializes the post game panel and sets the graphics according to the situation
+     *
+     * @param winnerID The game winner's id
+     * @param numTurns The game's total number of turns
+     */
     private void setPostGamePanel(int winnerID, int numTurns) {
         this.postGamePanel.setPostGamePanel(this.mainPanel, winnerID, numTurns);
         setBoardButtonsEnabled(false);
@@ -66,6 +90,9 @@ public class GameGraphics {
 
     public JButton getRotateButton() { return this.sidePanel.getRotateButton(); }
 
+    /**
+     * The function creates a panel for the GUI's game board, adds the board buttons and adds it to the main panel
+     */
     private void addBoardButtons() {
         JPanel boardPanel = new JPanel(new GridBagLayout());
         boardPanel.setSize(1000, 1000);
@@ -73,6 +100,11 @@ public class GameGraphics {
         this.mainPanel.add(boardPanel, BorderLayout.WEST); // After adding the buttons to the panel, it adds the panel to the frame
     }
 
+    /**
+     * The function adds the board buttons to the given panel
+     *
+     * @param boardPanel The board JPanel
+     */
     private void setBoardButtons(JPanel boardPanel) {
         int width, height;
         int SIZE1 = 39, SIZE2 = 11;
@@ -100,6 +132,9 @@ public class GameGraphics {
         }
     }
 
+    /**
+     * The function initializes the board buttons colors
+     */
     private void setBoardButtonsColor() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
@@ -116,6 +151,9 @@ public class GameGraphics {
         this.buttons[0][BOARD_SIZE / 2].setBackground(this.colorMap.get(ColorEnum.PLAYER2_COLOR));
     }
 
+    /**
+     * The function initializes the GUI's window
+     */
     private void setFrame() {
         this.frame.setTitle("Quoridor");
         this.frame.setSize(1300, 1000);
@@ -126,6 +164,13 @@ public class GameGraphics {
         this.frame.add(this.mainPanel);
     }
 
+    /**
+     * The function initializes the graphics of the beginning of the game
+     *
+     * @param playerID The player's id which plays first
+     * @param playerOneWallsLeft Number of walls left for player one
+     * @param playerTwoWallsLeft Number of walls left for player two
+     */
     public void setStartGameGraphics(int playerID, int playerOneWallsLeft, int playerTwoWallsLeft) {
         removePanel(this.getPreGamePanel());
         setSidePanel(false, true, false);
@@ -135,24 +180,41 @@ public class GameGraphics {
         setBoardButtonsListener();
     }
 
+    /**
+     * The function initializes the graphics of the ending of the game
+     *
+     * @param winnerID The game winner's id
+     * @param numTurns The game's total number of turns
+     */
     public void setPostGameGraphics(int winnerID, int numTurns) {
         removePanel(this.getSidePanel());
         setPostGamePanel(winnerID, numTurns);
     }
 
+    /**
+     * The function initializes the graphics for an AI turn
+     */
     public void setAITurnGraphics() {
         setBoardButtonsEnabled(false);
         setButtonEnabled(this.getRotateButton(), false);
     }
 
+    /**
+     * The function sets the state of the board buttons
+     *
+     * @param state The state of the board buttons (True for enabled and False for disabled)
+     */
     private void setBoardButtonsEnabled(boolean state) {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                this.buttons[i][j].setEnabled(state);
+                setButtonEnabled(this.buttons[i][j], state);
             }
         }
     }
 
+    /**
+     * The function adds an action listener to the board buttons in the context class
+     */
     private void setBoardButtonsListener() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
@@ -161,14 +223,30 @@ public class GameGraphics {
         }
     }
 
+    /**
+     * The function sets the state of the given button
+     *
+     * @param button The button to set its state
+     * @param state The state to set the button (True for enabled and False for disabled)
+     */
     private void setButtonEnabled(JButton button, boolean state) {
         button.setEnabled(state);
     }
 
+    /**
+     * The function removes the given panel from the main panel
+     *
+     * @param panel The panel to remove
+     */
     private void removePanel(JPanel panel) { this.mainPanel.remove(panel); }
 
+    /**
+     * The function returns the coordinates of the given button on the buttons board
+     *
+     * @param button The button being checked
+     * @return A Tuple of the coordinates of the given button on the buttons board or null if not on it
+     */
     public Tuple<Integer, Integer> getBoardButtonCoordinates(JButton button) {
-        // The function returns the coordinates of the clicked button (The tens' digit is the row and the units' digit is the column)
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (this.buttons[i][j] == button) {
@@ -179,6 +257,16 @@ public class GameGraphics {
         return null;
     }
 
+    /**
+     * The function makes a move on the GUI
+     *
+     * @param playerID The id of the move making player
+     * @param lastButtonX The X value of the player's current position on the buttons board
+     * @param lastButtonY The Y value of the player's current position on the buttons board
+     * @param buttonX The X value of the player's move position on the buttons board
+     * @param buttonY The Y value of the player's move position on the buttons board
+     * @param move The String describing the move
+     */
     public void doMove(int playerID, int lastButtonX, int lastButtonY, int buttonX, int buttonY, String move) {
         setBoardButtonsEnabled(false);
         setButtonEnabled(this.getContinueButton(), true);
@@ -189,6 +277,16 @@ public class GameGraphics {
         updateComment(String.format("Turn Made: %s", move));
     }
 
+    /**
+     * The function makes the last move (cancels the current move) on the GUI
+     *
+     * @param playerID The id of the move canceling player
+     * @param currentButtonX The X value of the player's current position on the buttons board
+     * @param currentButtonY The Y value of the player's current position on the buttons board
+     * @param lastButtonX The X value of the player's last move position on the buttons board
+     * @param lastButtonY The Y value of the player's last move position on the buttons board
+     * @param canceledMove The String describing the move which was canceled
+     */
     public void doMoveLastSquare(int playerID, int currentButtonX, int currentButtonY, int lastButtonX, int lastButtonY, String canceledMove) {
         setBoardButtonsEnabled(true);
         setButtonEnabled(this.getContinueButton(), false);
@@ -200,6 +298,16 @@ public class GameGraphics {
         updateComment(String.format("Turn Canceled: %s", canceledMove));
     }
 
+    /**
+     * The function makes a wall place on the GUI
+     *
+     * @param playerID The id of the move making player
+     * @param buttonX The X value of the wall's position on the buttons board
+     * @param buttonY The Y value of the wall's position on the buttons board
+     * @param wallOrientation The wall's orientation
+     * @param wallsLeft The player's number of walls left
+     * @param move The String describing the wall place
+     */
     public void doPlaceWall(int playerID, int buttonX, int buttonY, Orientation wallOrientation, int wallsLeft, String move) {
         setBoardButtonsEnabled(false);
         setButtonEnabled(this.getContinueButton(), true);
@@ -210,6 +318,16 @@ public class GameGraphics {
         updateComment(String.format("Turn Made: %s", move));
     }
 
+    /**
+     * The function removes a wall from the GUI
+     *
+     * @param playerID The id of the wall removing player
+     * @param buttonX The X value of the wall's position on the buttons board
+     * @param buttonY The Y value of the wall's position on the buttons board
+     * @param wallOrientation The wall's orientation
+     * @param wallsLeft The player's number of walls left
+     * @param canceledMove The String describing the wall remove
+     */
     public void doRemoveWall(int playerID, int buttonX, int buttonY, Orientation wallOrientation, int wallsLeft, String canceledMove) {
         setBoardButtonsEnabled(true);
         setButtonEnabled(this.getContinueButton(), false);
@@ -221,10 +339,20 @@ public class GameGraphics {
         updateComment(String.format("Turn Canceled: %s", canceledMove));
     }
 
+    /**
+     * The function updates the comment label to an invalid turn
+     *
+     * @param isWallTurn True if wall place turn and False if a move turn
+     */
     public void updateInvalidTurnComment(boolean isWallTurn) {
         updateComment(isWallTurn ? "Invalid wall!" : "Invalid move!");
     }
 
+    /**
+     * The function updates the game status label to the given player's id
+     *
+     * @param playerID The player's id
+     */
     public void updateCurrentTurn(int playerID) {
         setBoardButtonsEnabled(true);
         setButtonEnabled(this.getContinueButton(), false);
@@ -233,24 +361,57 @@ public class GameGraphics {
         updateGameStatus(String.format("Player %d's Turn!", playerID));
     }
 
+    /**
+     * The function paints a button as a valid move
+     *
+     * @param x The X value of the valid move on the buttons board
+     * @param y The Y value of the valid move on the buttons board
+     * @param currentTurn The player's id
+     */
     public void setValidMove(int x, int y, int currentTurn) {
         Color validMoveColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER1_COLOR) : this.colorMap.get(ColorEnum.VALID_MOVE_PLAYER2_COLOR));
         this.buttons[y][x].setBackground(validMoveColor);
     }
 
+    /**
+     * The function removes the valid move color from a button on the buttons board
+     *
+     * @param x The X value of the button on the buttons board
+     * @param y The Y value of the button on the buttons board
+     */
     public void removeValidMove(int x, int y) {
         this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function paints the player on the buttons board
+     *
+     * @param x The X value of the player on the buttons board
+     * @param y The Y value of the player on the buttons board
+     * @param currentTurn The player's id
+     */
     private void paintPlayer(int x, int y, int currentTurn) {
         Color playerColor = (currentTurn == BoardFill.PLAYER1.value() ? this.colorMap.get(ColorEnum.PLAYER1_COLOR) : this.colorMap.get(ColorEnum.PLAYER2_COLOR));
         this.buttons[y][x].setBackground(playerColor);
     }
 
+    /**
+     * The function removes the player from a button on the buttons board
+     *
+     * @param x The X value of the button on the buttons board
+     * @param y The Y value of the button on the buttons board
+     */
     private void removePlayer(int x, int y) {
         this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function paints a wall on the buttons board
+     *
+     * @param x The X value of wall on the buttons board
+     * @param y The Y value of wall on the buttons board
+     * @param orientation The wall's orientation
+     */
     private void paintWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
             this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.PLACED_WALL_COLOR));
@@ -263,6 +424,13 @@ public class GameGraphics {
         }
     }
 
+    /**
+     * The function removes a wall from the buttons board
+     *
+     * @param x The X value of wall on the buttons board
+     * @param y The Y value of wall on the buttons board
+     * @param orientation The wall's orientation
+     */
     private void deleteWall(int x, int y, Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
             this.buttons[y][x].setBackground(this.colorMap.get(ColorEnum.WALL_COLOR));
@@ -275,20 +443,56 @@ public class GameGraphics {
         }
     }
 
+    /**
+     * The function updates the rotate button
+     */
     public void rotate() { this.sidePanel.updateRotateButton(getOrientation()); }
 
+    /**
+     * The function returns an Orientation enum matching the text on the rotate button
+     *
+     * @return Orientation enum
+     */
     public Orientation getOrientation() { return this.getRotateButton().getText().equals("Horizontal") ? Orientation.HORIZONTAL : Orientation.VERTICAL; }
 
+    /**
+     * The function resets the rotate button
+     */
     public void resetRotateButton() { this.sidePanel.resetRotateButton(); }
 
+    /**
+     * The function updates the comment label
+     *
+     * @param comment The String to which the label updates to
+     */
     private void updateComment(String comment) { this.sidePanel.updateComment(comment); }
 
+    /**
+     * The function resets the comment label to blank
+     */
     public void resetComment() { this.sidePanel.updateComment(""); }
 
+    /**
+     * The function updates the game status label
+     *
+     * @param gameStatus The String to which the label updates to
+     */
     private void updateGameStatus(String gameStatus) { this.sidePanel.updateGameStatus(gameStatus); }
 
+    /**
+     * The function updates the player's number of walls left
+     *
+     * @param playerID The player's id
+     * @param wallsLeft The number of walls left the label changes to
+     */
     private void updatePlayerWallsLeft(int playerID, int wallsLeft) { this.sidePanel.updatePlayerWallsLeft(playerID, wallsLeft); }
 
+    /**
+     * The function adds a move to the moves list (according to the graphics format)
+     *
+     * @param playerID The id of the player that made the move
+     * @param move The String describing a move
+     */
     public void addMoveToList(int playerID, String move) { this.postGamePanel.addMoveToList(toFormattedString(playerID, move)); }
 
     /**

@@ -1,7 +1,7 @@
 package com.quoridorproj;
 
 public class Player {
-    private final int MAX_WALLS = 10;
+    private final int MAX_WALLS = 10; // The maximum number of walls a player can hold
 
     private int id;
     private int wallsLeft;
@@ -9,6 +9,11 @@ public class Player {
     private Square currentSquare; // Current square player stands on
     private Move lastMove; // The last turn the player made
 
+    /**
+     * Player Class Constructor
+     *
+     * @param id The player's id
+     */
     public Player(int id) {
         this.id = id;
         this.wallsLeft = MAX_WALLS;
@@ -16,6 +21,12 @@ public class Player {
         this.lastMove = null;
     }
 
+    /**
+     * Player Class Constructor specifying the Player and the Board objects to get the data from
+     *
+     * @param player The Player object to make a duplicate from
+     * @param board The player's connected Board object
+     */
     private Player(Player player, Board board) {
         this.id = player.id;
         this.wallsLeft = player.wallsLeft;
@@ -25,6 +36,12 @@ public class Player {
         this.lastMove = player.lastMove;
     }
 
+    /**
+     * The function returns a Player clone of the function calling Player object
+     *
+     * @param board The player's connected Board object
+     * @return Player object clone
+     */
     public Player duplicate(Board board) {
         return new Player(this, board);
     }

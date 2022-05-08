@@ -13,6 +13,9 @@ public class PostGamePanel {
     private JLabel gameWinner;
     private JLabel numTurns;
 
+    /**
+     * PostGamePanel Class Constructor
+     */
     public PostGamePanel() {
         this.colorMap = new ColorMap();
         this.movesListModel = new DefaultListModel<String>();
@@ -22,6 +25,13 @@ public class PostGamePanel {
         return this.postGamePanel;
     }
 
+    /**
+     * The function initializes the GUI's post game panel
+     *
+     * @param mainPanel The GUI's main panel
+     * @param winnerID The game winner's id
+     * @param numTurns The game's total number of turns
+     */
     public void setPostGamePanel(JPanel mainPanel, int winnerID, int numTurns) {
         // Sets an outer panel to hold the side panel
         this.postGamePanel = new JPanel();
@@ -55,6 +65,11 @@ public class PostGamePanel {
         mainPanel.add(this.postGamePanel, BorderLayout.EAST);
     }
 
+    /**
+     * The function initializes the game winner label
+     *
+     * @param winnerID The game winner's id
+     */
     private void setGameWinnerLabel(int winnerID) {
         this.gameWinner = new JLabel(String.format("PLAYER %d WON!", winnerID), JLabel.CENTER);
         this.gameWinner.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -62,6 +77,9 @@ public class PostGamePanel {
         this.gameWinner.setBorder(BorderFactory.createEmptyBorder(20, 0, 30, 0));
     }
 
+    /**
+     * The function initializes the moves list and attaches it with a ScrollPane
+     */
     private void setMovesList() {
         this.movesList = new JList<>();
         this.movesList.setModel(this.movesListModel);
@@ -77,6 +95,11 @@ public class PostGamePanel {
         this.movesListScroller.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
+    /**
+     * The function initializes the game's total number of turns label
+     *
+     * @param numTurns The game's total number of turns
+     */
     private void setNumTurnsLabel(int numTurns) {
         this.numTurns = new JLabel(String.format("Game has ended in %d turns!", numTurns), JLabel.CENTER);
         this.numTurns.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -84,5 +107,10 @@ public class PostGamePanel {
         this.numTurns.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
     }
 
+    /**
+     * The function adds a move to the moves list
+     *
+     * @param move The String describing a move
+     */
     public void addMoveToList(String move) { this.movesListModel.addElement(move); }
 }

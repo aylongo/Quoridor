@@ -5,6 +5,9 @@ public class Board {
 
     private Square[][] squares;
 
+    /**
+     * Board Class Constructor
+     */
     public Board() {
         this.squares = new Square[SQUARES_SIZE][SQUARES_SIZE];
         for (int i = 0; i < SQUARES_SIZE; i++) {
@@ -15,6 +18,11 @@ public class Board {
         configureSquaresNeighbors();
     }
 
+    /**
+     * Board Class Constructor specifying the Board object to get the data from
+     *
+     * @param board The Board object to make a duplicate from
+     */
     private Board(Board board) {
         this.squares = new Square[SQUARES_SIZE][SQUARES_SIZE];
 
@@ -26,10 +34,18 @@ public class Board {
         configureDuplicateSquaresNeighbors(board);
     }
 
+    /**
+     * The function returns a Board clone of the function calling Board object
+     *
+     * @return Board object clone
+     */
     public Board duplicate() {
         return new Board(this);
     }
 
+    /**
+     * The function initializes the neighbors of every Square in the Board
+     */
     private void configureSquaresNeighbors() {
         for (int i = 0; i < SQUARES_SIZE; i++) {
             for (int j = 1; j < SQUARES_SIZE; j++) {
@@ -53,6 +69,9 @@ public class Board {
         }
     }
 
+    /**
+     * The function initializes the neighbors of every Square in the Board according to the original Board
+     */
     private void configureDuplicateSquaresNeighbors(Board board) {
         for (int i = 0; i < SQUARES_SIZE; i++) {
             for (int j = 1; j < SQUARES_SIZE; j++) {

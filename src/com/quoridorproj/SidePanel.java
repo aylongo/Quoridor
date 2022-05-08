@@ -13,6 +13,9 @@ public class SidePanel {
     private JLabel gameStatus;
     private JLabel[] playersWallsLeft;
 
+    /**
+     * SidePanel Class Constructor
+     */
     public SidePanel() {
         this.colorMap = new ColorMap();
     }
@@ -29,6 +32,12 @@ public class SidePanel {
         return this.undoButton;
     }
 
+    /**
+     * The function initializes the GUI's side panel
+     *
+     * @param context The class which the function was called from
+     * @param mainPanel The GUI's main panel
+     */
     public void setSidePanel(GameHandler context, JPanel mainPanel) {
         // Sets an outer panel to hold the side panel
         this.sidePanel = new JPanel();
@@ -65,6 +74,9 @@ public class SidePanel {
         mainPanel.add(this.sidePanel, BorderLayout.EAST);
     }
 
+    /**
+     * The function initializes the game status label
+     */
     private void setGameStatusLabel() {
         this.gameStatus = new JLabel("", JLabel.CENTER);
         this.gameStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -75,6 +87,9 @@ public class SidePanel {
         this.gameStatus.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
     }
 
+    /**
+     * The function initializes the comment label
+     */
     private void setCommentLabel() {
         this.comment = new JLabel("", JLabel.CENTER);
         this.comment.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -84,6 +99,9 @@ public class SidePanel {
         this.comment.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
     }
 
+    /**
+     * The function initializes the continue button
+     */
     private void setContinueButton() {
         this.continueButton = new JButton("Continue");
         this.continueButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -91,6 +109,9 @@ public class SidePanel {
         this.continueButton.setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function initializes the undo button
+     */
     private void setUndoButton() {
         this.undoButton = new JButton("Undo");
         this.undoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -98,6 +119,9 @@ public class SidePanel {
         this.undoButton.setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function initializes the rotate button
+     */
     private void setRotateButton() {
         this.rotateButton = new JButton("Horizontal");
         this.rotateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -105,6 +129,9 @@ public class SidePanel {
         this.rotateButton.setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
     }
 
+    /**
+     * The function initializes the number of walls left labels
+     */
     private void setPlayersWallsLeftLables() {
         JLabel playerWallsLeftLabel;
         this.playersWallsLeft = new JLabel[3];
@@ -120,6 +147,11 @@ public class SidePanel {
         }
     }
 
+    /**
+     * The function updates the text on the rotate button according to the given orientation
+     *
+     * @param orientation An Orientation enum according to which the text on the button changes
+     */
     public void updateRotateButton(Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL)
             this.rotateButton.setText("Vertical");
@@ -127,15 +159,30 @@ public class SidePanel {
             this.rotateButton.setText("Horizontal");
     }
 
-    public void updateComment(String comment) {
-        this.comment.setText(comment);
-    }
+    /**
+     * The function updates the comment label
+     *
+     * @param comment The String to which the label updates to
+     */
+    public void updateComment(String comment) { this.comment.setText(comment); }
 
-    public void updateGameStatus(String gameStatus) {
-        this.gameStatus.setText(gameStatus);
-    }
+    /**
+     * The function updates the game status label
+     *
+     * @param gameStatus The String to which the label updates to
+     */
+    public void updateGameStatus(String gameStatus) { this.gameStatus.setText(gameStatus); }
 
+    /**
+     * The function updates the player's number of walls left
+     *
+     * @param playerID The player's id
+     * @param wallsLeft The number of walls left the label changes to
+     */
     public void updatePlayerWallsLeft(int playerID, int wallsLeft) { this.playersWallsLeft[playerID].setText(String.format("Player %d: %d Walls", playerID, wallsLeft)); }
 
+    /**
+     * The function resets the text on the rotate button (to 'Horizontal')
+     */
     public void resetRotateButton() { this.rotateButton.setText("Horizontal"); }
 }
