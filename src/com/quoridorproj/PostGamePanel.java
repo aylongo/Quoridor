@@ -10,6 +10,7 @@ public class PostGamePanel {
     private JScrollPane movesListScroller;
     private DefaultListModel<String> movesListModel;
     private JList<String> movesList;
+    private JButton playAgainButton;
     private JLabel gameWinner;
     private JLabel numTurns;
 
@@ -21,18 +22,21 @@ public class PostGamePanel {
         this.movesListModel = new DefaultListModel<String>();
     }
 
-    public JPanel getPostGamePanel() {
-        return this.postGamePanel;
-    }
+    public JPanel getPostGamePanel() { return this.postGamePanel; }
+
+    public JButton getPlayAgainButton() { return this.playAgainButton; }
+
+    public int getSelectedMovesListIndex() { return this.movesList.getSelectedIndex(); }
 
     /**
      * The function initializes the GUI's post game panel
      *
+     * @param context The class which the function was called from
      * @param mainPanel The GUI's main panel
      * @param winnerID The game winner's id
      * @param numTurns The game's total number of turns
      */
-    public void setPostGamePanel(JPanel mainPanel, int winnerID, int numTurns) {
+    public void setPostGamePanel(GameHandler context, JPanel mainPanel, int winnerID, int numTurns) {
         // Sets an outer panel to hold the side panel
         this.postGamePanel = new JPanel();
         this.postGamePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 0, 15));
@@ -55,8 +59,10 @@ public class PostGamePanel {
 
         setGameWinnerLabel(winnerID);
         postGamePanel.add(this.gameWinner);
-        setMovesList();
+        setMovesList(context);
         postGamePanel.add(this.movesListScroller);
+        setPlayAgainButton(context);
+        postGamePanel.add(this.playAgainButton);
         setNumTurnsLabel(numTurns);
         postGamePanel.add(this.numTurns);
 
@@ -79,20 +85,32 @@ public class PostGamePanel {
 
     /**
      * The function initializes the moves list and attaches it with a ScrollPane
+     *
+     * @param context The class which handles the list selections events
      */
-    private void setMovesList() {
+    private void setMovesList(GameHandler context) {
         this.movesList = new JList<>();
         this.movesList.setModel(this.movesListModel);
         this.movesList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        this.movesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         this.movesList.setVisibleRowCount(-1);
         this.movesList.setFont(new Font("Arial", Font.PLAIN, 12));
         this.movesList.setFixedCellWidth(24); this.movesList.setFixedCellHeight(20);
+        this.movesList.addListSelectionListener(context);
 
         this.movesListScroller = new JScrollPane(this.movesList);
         this.movesListScroller.setPreferredSize(new Dimension(220, 150));
         this.movesListScroller.setMaximumSize(new Dimension(220, 150));
         this.movesListScroller.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.GRAY));
         this.movesListScroller.setAlignmentX(Component.CENTER_ALIGNMENT);
+    }
+
+    public void setPlayAgainButton(GameHandler context) {
+        this.playAgainButton = new JButton("Play Again");
+        this.playAgainButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.playAgainButton.setFont(new Font("Arial", Font.PLAIN, 15));
+        this.playAgainButton.setBackground(this.colorMap.get(ColorEnum.EMPTY_COLOR));
+        this.playAgainButton.addActionListener(context);
     }
 
     /**
@@ -113,4 +131,6 @@ public class PostGamePanel {
      * @param move The String describing a move
      */
     public void addMoveToList(String move) { this.movesListModel.addElement(move); }
+
+    public void resetMovesListModel() { this.movesListModel.removeAllElements(); }
 }

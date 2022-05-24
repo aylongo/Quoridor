@@ -10,6 +10,7 @@ public class GameGraphics {
     private GameHandler context;
     private JFrame frame;
     private JPanel mainPanel;
+    private JPanel boardPanel;
     private JButton[][] buttons;
     private PreGamePanel preGamePanel;
     private SidePanel sidePanel;
@@ -69,6 +70,8 @@ public class GameGraphics {
         setBoardButtonsEnabled(true);
     }
 
+    private JPanel getPostGamePanel() { return this.postGamePanel.getPostGamePanel(); }
+
     /**
      * The function initializes the post game panel and sets the graphics according to the situation
      *
@@ -76,7 +79,7 @@ public class GameGraphics {
      * @param numTurns The game's total number of turns
      */
     private void setPostGamePanel(int winnerID, int numTurns) {
-        this.postGamePanel.setPostGamePanel(this.mainPanel, winnerID, numTurns);
+        this.postGamePanel.setPostGamePanel(this.context, this.mainPanel, winnerID, numTurns);
         setBoardButtonsEnabled(false);
     }
 
@@ -90,14 +93,18 @@ public class GameGraphics {
 
     public JButton getRotateButton() { return this.sidePanel.getRotateButton(); }
 
+    public JButton getPlayAgainButton() { return this.postGamePanel.getPlayAgainButton(); }
+
+    public int getSelectedMovesListIndex() { return this.postGamePanel.getSelectedMovesListIndex(); }
+
     /**
      * The function creates a panel for the GUI's game board, adds the board buttons and adds it to the main panel
      */
     private void addBoardButtons() {
-        JPanel boardPanel = new JPanel(new GridBagLayout());
-        boardPanel.setSize(1000, 1000);
-        setBoardButtons(boardPanel);
-        this.mainPanel.add(boardPanel, BorderLayout.WEST); // After adding the buttons to the panel, it adds the panel to the frame
+        this.boardPanel = new JPanel(new GridBagLayout());
+        this.boardPanel.setSize(1000, 1000);
+        setBoardButtons(this.boardPanel);
+        this.mainPanel.add(this.boardPanel, BorderLayout.WEST); // After adding the buttons to the panel, it adds the panel to the frame
     }
 
     /**
@@ -177,6 +184,7 @@ public class GameGraphics {
         updatePlayerWallsLeft(BoardFill.PLAYER1.value(), playerOneWallsLeft);
         updatePlayerWallsLeft(BoardFill.PLAYER2.value(), playerTwoWallsLeft);
         updateGameStatus(String.format("Player %d's Turn!", playerID));
+        this.postGamePanel.resetMovesListModel();
         setBoardButtonsListener();
     }
 
@@ -511,9 +519,17 @@ public class GameGraphics {
         return formattedMove;
     }
 
-    public void reset() {
-        // FIXME
+    public void resetBoardForReview() {
         setBoardButtonsColor();
+    }
+
+    public void reset() {
+        removePanel(this.boardPanel);
+        addBoardButtons();
+        setBoardButtonsColor();
+        removePanel(this.getPostGamePanel());
+        setPreGamePanel(true, true);
         resetComment();
+        setFrame();
     }
 }

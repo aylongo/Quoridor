@@ -9,6 +9,7 @@ public class Game {
     private Player[] players;
     private ArrayList<Move> movesList;
     private int currentTurn;
+    private int firstTurn;
     private int turnsCounter;
 
     /**
@@ -70,6 +71,8 @@ public class Game {
         players[BoardFill.PLAYER2.value()].setCurrentSquare(squares[0][size / 2]);
         players[BoardFill.PLAYER2.value()].setLastMove(Move.convertSquareToMove(squares[0][size / 2]));
     }
+
+    public ArrayList<Move> getMovesList() { return this.movesList; }
 
     public void addMoveToList(Move move) {
         this.movesList.add(move);
@@ -367,6 +370,14 @@ public class Game {
         }
     }
 
+    public void resetBoardForReview() {
+        this.players[BoardFill.PLAYER1.value()] = new Player(BoardFill.PLAYER1.value());
+        this.players[BoardFill.PLAYER2.value()] = new Player(BoardFill.PLAYER2.value());
+        this.currentTurn = this.firstTurn;
+        this.board = new Board();
+        placePlayersOnBoard();
+    }
+
     /**
      * The function resets the game object
      */
@@ -376,6 +387,7 @@ public class Game {
         this.turnsCounter = 0;
         // Who plays first is chosen randomly: (int) (Math.random() * (max - min + 1) + min)
         this.currentTurn = (int) (Math.random() * (BoardFill.PLAYER2.value()) + BoardFill.PLAYER1.value());
+        this.firstTurn = currentTurn;
         this.movesList = new ArrayList<>();
         this.board = new Board();
         placePlayersOnBoard();

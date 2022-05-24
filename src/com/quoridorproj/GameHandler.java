@@ -1,11 +1,13 @@
 package com.quoridorproj;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class GameHandler implements ActionListener {
+public class GameHandler implements ActionListener, ListSelectionListener {
     private final int MODE_AI = 1;
     private final int MODE_TWO_PLAYERS = 2;
     private final int AI_DEPTH = 4;
@@ -42,8 +44,52 @@ public class GameHandler implements ActionListener {
             handleMode(MODE_AI);
         else if (e.getSource() == graphics.getPlayTwoPlayersButton())
             handleMode(MODE_TWO_PLAYERS);
+        else if (e.getSource() == graphics.getPlayAgainButton())
+            handleReset();
         else
             handleTurn(e);
+    }
+
+    /**
+     * The function handles the GUI's list selection events
+     *
+     * @param e The list selection event that triggered the function
+     */
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        if (!e.getValueIsAdjusting()) {
+            int selectedListIndex = this.graphics.getSelectedMovesListIndex();
+            if (selectedListIndex != -1) {
+                showSelectedMove(selectedListIndex);
+            }
+        }
+    }
+
+    /**
+     * The function shows the game state after the move in the moves list in the index given is played
+     *
+     * @param selectedListIndex The index of the move in the moves list
+     */
+    private void showSelectedMove(int selectedListIndex) {
+        ArrayList<Move> movesList = this.game.getMovesList();
+
+        this.game.resetBoardForReview();
+        this.graphics.resetBoardForReview();
+
+        for (int i = 0; i <= selectedListIndex; i++) {
+            Move move = movesList.get(i);
+            int moveButtonX = move.getX() * 2;
+            int moveButtonY = move.getY() * 2;
+
+            if (move.isWall()) {
+                moveButtonX++; moveButtonY++;
+                doPlaceWall(move, moveButtonX, moveButtonY);
+            } else {
+                doMove(move, moveButtonX, moveButtonY);
+            }
+
+            this.game.updateCurrentTurn();
+        }
     }
 
     private void handleRotate() {
@@ -91,7 +137,15 @@ public class GameHandler implements ActionListener {
      * @param mode The type of game mode the user chooses to play
      */
     private void handleMode(int mode) {
-        resetGame(mode);
+        startGame(mode);
+    }
+
+    /**
+     * The function resets the game (logic) and the GUI so the user can start a new one
+     */
+    private void handleReset() {
+        this.game.reset();
+        this.graphics.reset();
     }
 
     /**
@@ -246,9 +300,7 @@ public class GameHandler implements ActionListener {
      * The function starts the game in the selected mode
      * @param mode The type of game mode the user chooses to play
      */
-    private void resetGame(int mode) {
-        // this.game.reset();
-        // this.graphics.reset();
+    private void startGame(int mode) {
         this.mode = mode;
         int playerOneWallsLeft = this.game.getPlayers()[BoardFill.PLAYER1.value()].getWallsLeft();
         int playerTwoWallsLeft = this.game.getPlayers()[BoardFill.PLAYER2.value()].getWallsLeft();
